@@ -1,0 +1,38 @@
+{
+  "name": "MovingOut",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": { "$path": "src/shared" }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": { "$path": "src/server" }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": { "$path": "src/client" }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "Baseplate": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Size": [512, 2, 512],
+          "Position": [0, -1, 0],
+          "Material": "Grass",
+          "Color": [106, 127, 63]
+        }
+      },
+      "SpawnLocation": {
+        "$className": "SpawnLocation",
+        "$properties": { "Anchored": true, "Size": [8, 1, 8], "Position": [0, 0.5, 0] }
+      }
+    }
+  }
+}
