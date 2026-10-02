@@ -114,7 +114,9 @@ function UI.Text(parent: Instance, text: string, size: UDim2, pos: UDim2, props:
 	t.RichText = true
 	if props then
 		for k, v in props do
-			(t :: any)[k] = v
+			if k ~= "MaxText" then
+				(t :: any)[k] = v
+			end
 		end
 	end
 	t.Parent = parent

@@ -85,6 +85,11 @@ local function unload()
 	S.World.Level = nil
 	S.World.Paused = false
 	state():SetAttribute("Paused", false)
+	for root in savedRoots do
+		if root.Parent then
+			root.Anchored = false
+		end
+	end
 	table.clear(savedRoots)
 end
 
@@ -239,6 +244,7 @@ function JobManager.SetPaused(paused: boolean, by: Player?)
 	end
 	if not paused then
 		table.clear(savedRoots)
+		S.Carry.RefreshOwners()
 	end
 	S.Players.UpdateAllSpeeds()
 	if phase == "Playing" then

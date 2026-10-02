@@ -63,10 +63,12 @@ function Menus.Current(): string?
 	return current
 end
 
-function Menus.Show(name: string?, push: boolean?)
+-- Shows a screen (nil = none). push keeps the current one to come back to; pop is
+-- used by Back so the rest of the stack survives.
+function Menus.Show(name: string?, push: boolean?, pop: boolean?)
 	if push and current and name then
 		table.insert(stack, current)
-	elseif not push then
+	elseif not push and not pop then
 		table.clear(stack)
 	end
 	for n, f in screens do
@@ -91,12 +93,13 @@ end
 function Menus.Back()
 	local prev = table.remove(stack)
 	if prev then
-		Menus.Show(prev, false)
-		-- restore the remaining stack (Show without push cleared it)
-	elseif current == "Board" or current == "Look" then
-		Menus.Show(nil)
+		Menus.Show(prev, false, true)
 	elseif current == "Pause" then
 		Net.Action:FireServer("Resume")
+	elseif current == "Title" or current == "Briefing" or current == "Results" then
+		return -- these follow the game phase
+	else
+		Menus.Show(nil)
 	end
 end
 
@@ -672,6 +675,9 @@ function Menus.FollowPhase()
 	end
 	local phase = State.Phase()
 	local paused = State.Game():GetAttribute("Paused") == true
+	if phase == "Briefing" or phase == "Countdown" then
+		lastResults = nil
+	end
 	if phase == "Briefing" then
 		if current ~= "Settings" and current ~= "Controls" then
 			Menus.Show("Briefing")

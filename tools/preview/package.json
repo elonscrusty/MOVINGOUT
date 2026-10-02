@@ -1,0 +1,9 @@
+{
+  "name": "movingout-preview",
+  "private": true,
+  "type": "module",
+  "description": "Offline preview renderer for MOVING OUT (docs/PREVIEW.md)",
+  "dependencies": {
+    "three": "0.186.1"
+  }
+}

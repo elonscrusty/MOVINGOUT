@@ -281,6 +281,16 @@ function CarrySystem.ReleaseAll()
 	end
 end
 
+-- After a pause (anchoring drops network ownership) give held items back to a holder.
+function CarrySystem.RefreshOwners()
+	for _, h in held do
+		for p in h.Holds do
+			setOwner(h.Body, p)
+			break
+		end
+	end
+end
+
 -- Mover count changed (solo <-> group): recompute every held item's forces.
 function CarrySystem.RefreshAll()
 	for _, h in held do
@@ -517,7 +527,11 @@ local function launch(model: Model, direction: Vector3, class: string, strength:
 		body.AssemblyAngularVelocity = Vector3.new(flat.Z, 0, -flat.X) * 6
 	end
 	model:SetAttribute("Thrown", serverNow())
-	S.Fx.All("Throw", { Item = model.Name, Pos = body.Position, Coop = #throwers > 1 })
+	local ids = {}
+	for _, p in throwers do
+		table.insert(ids, p.UserId)
+	end
+	S.Fx.All("Throw", { Item = model.Name, Pos = body.Position, Coop = #throwers > 1, Throwers = ids })
 	task.delay(Config.Throw.ServerOwnSeconds, function()
 		if model.Parent and not CarrySystem.IsHeld(model) and not body.Anchored then
 			pcall(function()

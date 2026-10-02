@@ -73,7 +73,10 @@ function DataService.Sanitize(raw: any): any
 	if type(raw.Bindings) == "table" then
 		for _, action in Config.Bindings.Remappable do
 			local b = raw.Bindings[action]
-			if type(b) == "string" and #b <= 32 and (Enum.KeyCode :: any)[b] ~= nil then
+			local valid = type(b) == "string" and #b <= 32 and pcall(function()
+				return (Enum.KeyCode :: any)[b]
+			end)
+			if valid then
 				p.Bindings[action] = b
 			end
 		end

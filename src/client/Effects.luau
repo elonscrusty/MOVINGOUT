@@ -150,8 +150,9 @@ end
 
 handlers.Throw = function(d)
 	Audio.PlayAt("Throw", d.Pos, d.Coop and 0.8 or 1.4)
-	for _, p in Players:GetPlayers() do
-		if p:GetAttribute("Windup") or p:GetAttribute("Holding") == d.Item then
+	for _, id in d.Throwers or {} do
+		local p = Players:GetPlayerByUserId(id)
+		if p then
 			MoverAnimator.ThrowRelease(p)
 		end
 	end
@@ -199,9 +200,6 @@ end
 
 handlers.Deliver = function(d)
 	local pos = d.Pos or itemPos(d.Item)
-	if d.Required == false then
-		return
-	end
 	if d.Delivered then
 		Audio.PlayAt("Deliver", pos)
 		if pos then
