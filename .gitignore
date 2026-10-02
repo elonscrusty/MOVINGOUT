@@ -1,2 +1,6 @@
 *.lock
 __pycache__/
+tools/levels/out/
+tools/preview/node_modules/
+tools/preview/.cache/
+tools/preview/out/

@@ -12,27 +12,54 @@
     },
     "StarterPlayer": {
       "$className": "StarterPlayer",
+      "$properties": {
+        "CharacterWalkSpeed": 16,
+        "CharacterUseJumpPower": false,
+        "CharacterJumpHeight": 3.2,
+        "LoadCharacterAppearance": false,
+        "EnableMouseLockOption": false,
+        "CameraMaxZoomDistance": 200,
+        "CameraMinZoomDistance": 10,
+        "AutoJumpEnabled": false
+      },
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
         "Client": { "$path": "src/client" }
       }
     },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$properties": { "ResetPlayerGuiOnSpawn": false }
+    },
+    "Players": {
+      "$className": "Players",
+      "$properties": { "CharacterAutoLoads": false }
+    },
     "Workspace": {
       "$className": "Workspace",
-      "Baseplate": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Size": [512, 2, 512],
-          "Position": [0, -1, 0],
-          "Material": "Grass",
-          "Color": [106, 127, 63]
-        }
-      },
-      "SpawnLocation": {
-        "$className": "SpawnLocation",
-        "$properties": { "Anchored": true, "Size": [8, 1, 8], "Position": [0, 0.5, 0] }
+      "$properties": {
+        "StreamingEnabled": false,
+        "Gravity": 140,
+        "FallenPartsDestroyHeight": -400
       }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "ShadowMap",
+        "ClockTime": 13.5,
+        "Brightness": 2.6,
+        "GlobalShadows": true,
+        "ShadowSoftness": 0.35,
+        "EnvironmentDiffuseScale": 0.6,
+        "EnvironmentSpecularScale": 0.2,
+        "Ambient": [0.45, 0.43, 0.42],
+        "OutdoorAmbient": [0.58, 0.56, 0.54]
+      }
+    },
+    "SoundService": {
+      "$className": "SoundService",
+      "$properties": { "RespectFilteringEnabled": true }
     }
   }
 }
