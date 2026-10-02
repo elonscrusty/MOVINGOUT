@@ -42,8 +42,8 @@ local function screen(name: string, dim: boolean?): Frame
 	local f = Instance.new("Frame")
 	f.Name = name
 	f.Size = UDim2.fromScale(1, 1)
-	f.BackgroundColor3 = Color3.fromRGB(30, 22, 40)
-	f.BackgroundTransparency = dim == false and 1 or 0.45
+	f.BackgroundColor3 = Color3.fromRGB(26, 44, 74)
+	f.BackgroundTransparency = dim == false and 1 or 0.42
 	f.Visible = false
 	f.Parent = root
 	screens[name] = f
@@ -148,37 +148,96 @@ end
 ----------------------------------------------------------------------------------------
 -- Look (mover style)
 
+local function lookCamera(vp: ViewportFrame)
+	local cam = Instance.new("Camera")
+	cam.FieldOfView = 30
+	cam.CFrame = CFrame.lookAt(Vector3.new(-2.2, 4.6, -13), Vector3.new(0, 3.05, 0))
+	cam.Parent = vp
+	vp.CurrentCamera = cam
+end
+
 local function buildLook()
 	local s = screen("Look")
-	local p = card(s, 0.7, 0.6)
-	UI.Text(p, "CHOOSE YOUR MOVER", U(1, -40, 0.14, 0), U(0, 20, 0, 12), { MaxText = 40 })
-	UI.Text(p, "Your shirt is always your player colour; the look changes your hat and hair.", U(1, -40, 0.08, 0), U(0, 20, 0.15, 0), { TextColor3 = C.PanelDark, MaxText = 20 })
+	local p = card(s, 0.94, 0.84)
+	local size = p:FindFirstChildOfClass("UISizeConstraint")
+	if size then
+		size.MaxSize = Vector2.new(1400, 640)
+	end
+	UI.Banner(p, "Mover Select")
+	UI.Text(p, "Pick your look. Your shirt keeps your player colour and number.", U(1, -40, 0.05, 0), U(0, 20, 0.775, 0), { TextColor3 = C.PanelDark, MaxText = 18 })
 	local list = {}
+	local cards: { [number]: TextButton } = {}
+	local views: { [number]: ViewportFrame } = {}
+	local builtFor = -1
+	local n = #Movers.Styles
+	local w = 0.96 / n
 	for i, style in Movers.Styles do
-		local col = (i - 1) % 4
-		local row = (i - 1) // 4
-		local b = UI.NavButton(p, style.Name, U(0.22, 0, 0.16, 0), U(0.14 + col * 0.24, 0, 0.38 + row * 0.2, 0), function()
+		local b = UI.NavButton(p, "", U(w, -8, 0.66, 0), U(0.02 + (i - 0.5) * w, 0, 0.47, 0), function()
 			Net.Action:FireServer("SetStyle", i)
 			State.Profile.Style = i
 			if refreshers.Look then
 				refreshers.Look()
 			end
-		end, C.White)
+		end, style.Card)
 		b:SetAttribute("Style", i)
+		local bar = Instance.new("UIAspectRatioConstraint")
+		bar.AspectRatio = 0.56
+		bar.Parent = b
+		UI.Shade(b, 0.3)
+		local vp = Instance.new("ViewportFrame")
+		vp.Name = "Portrait"
+		vp.Size = U(1, -6, 0.8, 0)
+		vp.Position = U(0.5, 0, 0.02, 0)
+		vp.AnchorPoint = Vector2.new(0.5, 0)
+		vp.BackgroundTransparency = 1
+		vp.Ambient = Color3.fromRGB(150, 150, 160)
+		vp.LightColor = Color3.fromRGB(255, 250, 240)
+		vp.LightDirection = Vector3.new(-0.6, -1, 0.9)
+		vp.Parent = b
+		local ar = Instance.new("UIAspectRatioConstraint")
+		ar.AspectRatio = 0.62
+		ar.Parent = vp
+		lookCamera(vp)
+		views[i] = vp
+		local name = UI.Outlined(b, style.Name, U(1, -8, 0.13, 0), U(0, 4, 0.84, 0), { MaxText = 26 })
+		name.Name = "StyleName"
+		local pick = Instance.new("Frame")
+		pick.Name = "Picked"
+		pick.BackgroundTransparency = 1
+		pick.Size = U(1, 10, 1, 10)
+		pick.Position = U(0, -5, 0, -5)
+		pick.Visible = false
+		pick.Parent = b
+		UI.Corner(pick, 22)
+		UI.Stroke(pick, 5, C.Yellow)
+		local tag = UI.Outlined(pick, "Ready!", U(1, -10, 0, 30), U(0, 5, 0, 10), { MaxText = 28, TextColor3 = C.Yellow })
+		tag.Name = "ReadyTag"
+		cards[i] = b
 		table.insert(list, b)
 	end
-	local done = UI.NavButton(p, "DONE", U(0.3, 0, 0.13, 0), U(0.5, 0, 0.86, 0), function()
+	local done = UI.NavButton(p, "DONE", U(0.26, 0, 0.11, 0), U(0.5, 0, 0.9, 0), function()
 		Menus.Back()
 	end, C.Green)
 	table.insert(list, done)
 	navs.Look = list
 	refreshers.Look = function()
 		local mine = (State.Player:GetAttribute("Style") :: number?) or State.Profile.Style or 1
-		for _, b in list do
-			local st = b:GetAttribute("Style")
-			if st then
-				(b :: TextButton).BackgroundColor3 = st == mine and C.Yellow or C.White
+		local slot = State.MySlot()
+		if slot ~= builtFor then
+			builtFor = slot
+			local info = Config.Slots[slot] or Config.Slots[1]
+			for i, vp in views do
+				local old = vp:FindFirstChild("MoverPreview")
+				if old then
+					old:Destroy()
+				end
+				local m = Movers.PreviewModel(i, info.Color, slot, Config.Movement.HeightScale)
+				m.Parent = vp
 			end
+		end
+		for i, b in cards do
+			local pick = b:FindFirstChild("Picked") :: Frame
+			pick.Visible = i == mine
 		end
 	end
 end
@@ -193,8 +252,8 @@ end
 local function buildBoard()
 	local s = screen("Board")
 	local p = card(s, 0.94, 0.9)
-	UI.Text(p, "JOB BOARD", U(0.5, 0, 0.08, 0), U(0, 20, 0, 10), { TextXAlignment = Enum.TextXAlignment.Left, MaxText = 40 })
-	local hostNote = UI.Text(p, "", U(0.45, 0, 0.06, 0), U(0.53, 0, 0, 16), { TextXAlignment = Enum.TextXAlignment.Right, TextColor3 = C.PanelDark, MaxText = 20 })
+	UI.Banner(p, "Job Board", 0.36)
+	local hostNote = UI.Text(p, "", U(0.6, 0, 0.045, 0), U(0.2, 0, 0.085, 0), { TextColor3 = C.PanelDark, MaxText = 20 })
 	local list: { GuiObject } = {}
 	local cards: { [string]: TextButton } = {}
 	for i, job in Jobs.List do
@@ -299,7 +358,7 @@ local function buildBoard()
 				badge.BackgroundColor3 = C.Grey
 				bt.Text = "LOCKED"
 			end
-			b.BackgroundColor3 = (selectedJob == job.Id) and C.Yellow or (unlocked and C.White or C.Grey)
+			b.BackgroundColor3 = (selectedJob == job.Id) and C.Yellow or (unlocked and C.Cream or C.Grey)
 			UI.SetDisabled(b, not unlocked)
 		end
 		timeB.Text = "Award times x" .. tostring(assists.TimeScale)
@@ -324,8 +383,8 @@ end
 local function buildBriefing()
 	local s = screen("Briefing")
 	local p = card(s, 0.8, 0.8)
-	local title = UI.Text(p, "", U(1, -40, 0.12, 0), U(0, 20, 0, 12), { MaxText = 44 })
-	local objective = UI.Text(p, "", U(1, -40, 0.1, 0), U(0, 20, 0.13, 0), { TextColor3 = C.Orange, MaxText = 26 })
+	local title = UI.Banner(p, "", 0.5)
+	local objective = UI.Text(p, "", U(1, -40, 0.08, 0), U(0, 20, 0.1, 0), { TextColor3 = C.Orange, MaxText = 26 })
 	local body = UI.Text(p, "", U(0.55, -30, 0.5, 0), U(0, 20, 0.25, 0), { TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, MaxText = 18 })
 	local controls = UI.Text(p, "", U(0.42, -20, 0.5, 0), U(0.57, 0, 0.25, 0), { TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, TextColor3 = C.PanelDark, MaxText = 16 })
 	local wait = UI.Text(p, "", U(0.6, 0, 0.06, 0), U(0.2, 0, 0.77, 0), { TextColor3 = C.PanelDark, MaxText = 18 })
@@ -379,7 +438,7 @@ local confirmAction: (() -> ())? = nil
 local function buildPause()
 	local s = screen("Pause")
 	local p = card(s, 0.42, 0.78)
-	local title = UI.Text(p, "PAUSED", U(1, -40, 0.12, 0), U(0, 20, 0, 12), { MaxText = 44 })
+	local title = UI.Banner(p, "Paused", 0.7)
 	local by = UI.Text(p, "", U(1, -40, 0.06, 0), U(0, 20, 0.13, 0), { TextColor3 = C.PanelDark, MaxText = 18 })
 	local y = 0.27
 	local function b(text: string, fn: () -> (), color: Color3?): TextButton
@@ -417,13 +476,14 @@ local function buildPause()
 		UI.SetDisabled(restart, not leader)
 		UI.SetDisabled(board, not leader)
 		note.Text = leader and "" or "Only the host can restart or quit the job."
-		title.Text = "PAUSED"
+		title.Text = "Paused"
 	end
 
 	-- confirmation dialog
 	local cs = screen("Confirm")
 	local cp = card(cs, 0.42, 0.36)
-	local ct = UI.Text(cp, "Are you sure? Progress in this job will be lost.", U(0.9, 0, 0.4, 0), U(0.05, 0, 0.08, 0), { MaxText = 24 })
+	UI.Banner(cp, "Are you sure?", 0.7)
+	local ct = UI.Text(cp, "Progress in this job will be lost.", U(0.9, 0, 0.3, 0), U(0.05, 0, 0.2, 0), { MaxText = 24 })
 	ct.Name = "Question"
 	local yes = UI.NavButton(cp, "YES", U(0.38, 0, 0.24, 0), U(0.28, 0, 0.75, 0), function()
 		local fn = confirmAction
@@ -446,15 +506,16 @@ end
 local function buildResults()
 	local s = screen("Results")
 	local p = card(s, 0.6, 0.82)
-	local title = UI.Text(p, "JOB COMPLETE!", U(1, -40, 0.12, 0), U(0, 20, 0, 12), { MaxText = 48, TextColor3 = C.Orange })
+	local title = UI.Banner(p, "Job Complete!", 0.6)
 	local time = UI.Text(p, "", U(1, -40, 0.13, 0), U(0, 20, 0.14, 0), { MaxText = 52 })
 	local medal = Instance.new("Frame")
 	medal.Size = U(0.36, 0, 0.12, 0)
 	medal.Position = U(0.32, 0, 0.29, 0)
 	medal.Parent = p
 	UI.Corner(medal, 20)
-	UI.Stroke(medal, 4)
-	local medalText = UI.Text(medal, "", UDim2.fromScale(1, 1), UDim2.new(), { MaxText = 34 })
+	UI.Stroke(medal, 5, C.White)
+	UI.Shade(medal, 0.2)
+	local medalText = UI.Outlined(medal, "", UDim2.fromScale(1, 1), UDim2.new(), { MaxText = 34 })
 	local detail = UI.Text(p, "", U(0.9, 0, 0.24, 0), U(0.05, 0, 0.43, 0), { TextColor3 = C.PanelDark, MaxText = 20 })
 	local replay = UI.NavButton(p, "REPLAY", U(0.28, 0, 0.11, 0), U(0.2, 0, 0.82, 0), function()
 		Net.Action:FireServer("Replay")
@@ -474,7 +535,7 @@ local function buildResults()
 			return
 		end
 		local job = Jobs.ById[r.JobId]
-		title.Text = "JOB COMPLETE!"
+		title.Text = "Job Complete!"
 		time.Text = UI.FormatTime(r.Time)
 		medal.BackgroundColor3 = medalColor(r.Medal)
 		medalText.Text = r.Medal == "None" and "NO AWARD" or string.upper(r.Medal)
@@ -519,7 +580,7 @@ end
 local function buildSettings()
 	local s = screen("Settings")
 	local p = card(s, 0.8, 0.88)
-	UI.Text(p, "SETTINGS", U(1, -40, 0.09, 0), U(0, 20, 0, 8), { MaxText = 40 })
+	UI.Banner(p, "Settings", 0.36)
 	local list: { GuiObject } = {}
 	local labels: { [string]: TextButton } = {}
 	local explain = UI.Text(p, "", U(0.9, 0, 0.06, 0), U(0.05, 0, 0.8, 0), { TextColor3 = C.PanelDark, MaxText = 15 })
@@ -648,7 +709,7 @@ end
 local function buildControls()
 	local s = screen("Controls")
 	local p = card(s, 0.8, 0.84)
-	UI.Text(p, "CONTROLS", U(1, -40, 0.1, 0), U(0, 20, 0, 10), { MaxText = 40 })
+	UI.Banner(p, "Controls", 0.36)
 	local cols = {
 		{ "KEYBOARD", "Move: WASD or arrows\nGrab / drop: E (or L-Shift)\nThrow: Q (or R)\nSlap: F (or G)\nJump: Space\nPause: P or Esc\nMenus: arrows + Enter" },
 		{ "GAMEPAD", "Move: left stick\nGrab / drop: RB (or RT)\nThrow: X (or B)\nSlap: Y (or LB)\nJump: A\nPause: Menu\nMenus: d-pad + A, B back" },

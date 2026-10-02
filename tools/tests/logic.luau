@@ -198,7 +198,7 @@ for _, job in Jobs.List do
 	check(job.Id .. ": medal none after bronze", Jobs.Medal(job, a.Bronze + 1) == "None")
 	check(job.Id .. ": assist scale widens", Jobs.Medal(job, a.Gold * 1.4, 1.5) == "Gold")
 	local n = Jobs.RequiredCount(job)
-	check(job.Id .. ": 10-16 required items", n >= 10 and n <= 16, tostring(n))
+	check(job.Id .. ": 10-28 required items", n >= 10 and n <= 28, tostring(n))
 	local ids = {}
 	for i, item in job.Items do
 		check(job.Id .. ": known kind " .. tostring(item.Kind), FurnitureData.Kinds[item.Kind] ~= nil)

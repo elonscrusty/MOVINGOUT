@@ -26,6 +26,6 @@ Studio access during sessions, so nothing is verified in Studio unless they say 
 - Tools live in /tmp/sh-tools (rojo, luau-lsp, lune): reinstall per session (see docs/LEVELS.md, tools/preview/setup.sh).
 
 ## Where things stand
-v0.1.0 first playable: 4 jobs + depot lobby, all systems in. Type check, logic tests,
+v0.1.0 first playable: 4 jobs + depot lobby, all systems in. Visual pass 2 matched the real game's Steam screenshots (steep camera, two-tone walls, patterned floors, open van with arrow drop zone, blocky-head movers, box-count + stopwatch HUD, 20-23 items per job). Type check, logic tests,
 level checks and preview renders pass. NOT tested in Studio: physics handling needs a
 playtest and tuning. See docs/STATUS.md for verification, assumptions and gaps.

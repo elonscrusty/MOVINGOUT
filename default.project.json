@@ -47,14 +47,17 @@
       "$className": "Lighting",
       "$properties": {
         "Technology": "ShadowMap",
-        "ClockTime": 13.5,
-        "Brightness": 2.6,
+        "ClockTime": 13.2,
+        "GeographicLatitude": 30,
+        "Brightness": 2.2,
         "GlobalShadows": true,
-        "ShadowSoftness": 0.35,
-        "EnvironmentDiffuseScale": 0.6,
-        "EnvironmentSpecularScale": 0.2,
-        "Ambient": [0.45, 0.43, 0.42],
-        "OutdoorAmbient": [0.58, 0.56, 0.54]
+        "ShadowSoftness": 0.85,
+        "EnvironmentDiffuseScale": 1,
+        "EnvironmentSpecularScale": 0.15,
+        "ExposureCompensation": 0.1,
+        "ColorShift_Top": [1, 0.97, 0.92],
+        "Ambient": [0.6, 0.58, 0.62],
+        "OutdoorAmbient": [0.74, 0.74, 0.78]
       }
     },
     "SoundService": {

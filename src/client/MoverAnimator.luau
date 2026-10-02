@@ -98,25 +98,25 @@ local function makeTag(player: Player, slot: number, head: BasePart): (Billboard
 	local info = Config.Slots[slot] or Config.Slots[1]
 	local tag = Instance.new("BillboardGui")
 	tag.Name = "MoverTag"
-	tag.Size = UDim2.fromOffset(110, 34)
-	tag.StudsOffsetWorldSpace = Vector3.new(0, 4.6, 0)
+	tag.Size = UDim2.fromOffset(64, 22)
+	tag.StudsOffsetWorldSpace = Vector3.new(0, 3.3, 0)
 	tag.AlwaysOnTop = true
 	tag.LightInfluence = 0
 	tag.MaxDistance = 400
 	tag.Adornee = head
 	tag.Parent = folder
-	local t = UI.Text(tag, info.Name .. " " .. info.Symbol, UDim2.fromScale(1, 1), UDim2.new(), { TextColor3 = info.Color, MaxText = 26 })
+	-- small and quiet: the ring and shirt number do most of the work; your own tag
+	-- gets a white outline so you can find yourself in a crowd
+	local t = UI.Text(tag, info.Name .. info.Symbol, UDim2.fromScale(1, 1), UDim2.new(), { TextColor3 = info.Color, MaxText = 18 })
 	local stroke = Instance.new("UIStroke")
-	stroke.Thickness = 3
-	stroke.Color = Color3.fromRGB(30, 24, 36)
+	stroke.Thickness = 2.5
+	stroke.Color = player == Players.LocalPlayer and Color3.new(1, 1, 1) or Color3.fromRGB(30, 24, 36)
+	stroke.LineJoinMode = Enum.LineJoinMode.Round
 	stroke.Parent = t
-	if player == Players.LocalPlayer then
-		t.Text = info.Name .. " " .. info.Symbol .. " (you)"
-	end
 	local stars = Instance.new("BillboardGui")
 	stars.Name = "Stars"
 	stars.Size = UDim2.fromOffset(90, 40)
-	stars.StudsOffsetWorldSpace = Vector3.new(0, 3.4, 0)
+	stars.StudsOffsetWorldSpace = Vector3.new(0, 2.6, 0)
 	stars.AlwaysOnTop = true
 	stars.Enabled = false
 	stars.Adornee = head

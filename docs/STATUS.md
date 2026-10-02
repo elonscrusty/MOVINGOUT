@@ -15,8 +15,8 @@ on Roblox instead of a browser. Consequences:
 |---|---|---|
 | Type check, zero diagnostics | `bash tools/check.sh` (luau-lsp) | PASS |
 | Every script compiles, Rojo place builds | same | PASS |
-| Logic: delivery geometry, hysteresis, saves (malformed data, merge, best-time rule), awards, level item counts | `lune run tools/tests/logic.luau` | PASS, 167 checks |
-| Every required item has a walking route to the truck without breaking anything; nothing starts inside walls or water; truck fill 74-80% | `python3 tools/levels/check.py` | PASS, all 5 levels |
+| Logic: delivery geometry, hysteresis, saves (malformed data, merge, best-time rule), awards, level item counts | `lune run tools/tests/logic.luau` | PASS, 229 checks |
+| Every required item has a walking route to the truck without breaking anything; nothing starts inside walls or water; truck fill 84-89% | `python3 tools/levels/check.py` | PASS, all 5 levels |
 | Real server and client boot with no errors; all menus, HUD and all levels render | `tools/preview` renders on a mock Roblox API | PASS, 0 errors (approximation, not Roblox) |
 | Carrying, cooperative handling, throwing, doors, ropes, conveyors, cars, ghosts and truck packing under real physics | needs Roblox Studio | **NOT TESTED** |
 | Frame rate | needs a device | **NOT MEASURED** |

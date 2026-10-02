@@ -10,8 +10,12 @@
 	Award times are PROVISIONAL reconstruction targets: retune after playtests.
 ]]
 
-local wall = Color3.fromRGB(122, 112, 138)
-local cap = Color3.fromRGB(62, 50, 74)
+local green = Color3.fromRGB(110, 150, 118) -- wallpapers, one per room
+local maroon = Color3.fromRGB(156, 70, 80)
+local ochre = Color3.fromRGB(214, 168, 96)
+local lilac = Color3.fromRGB(140, 124, 170)
+local teal = Color3.fromRGB(74, 120, 118)
+local stone = Color3.fromRGB(116, 112, 128)
 local lanternWarm = Color3.fromRGB(255, 176, 80)
 local lanternGreen = Color3.fromRGB(150, 255, 170)
 
@@ -24,73 +28,84 @@ return {
 		"The coffin and the piano are long: turn them end-first through the doors.",
 		"Boarded doors and old glass make shortcuts - if you can smash them.",
 	},
-	Camera = { Yaw = 22, Pitch = 52 },
+	Camera = { Yaw = 22, Pitch = 62, View = { Min = { -46, -62 }, Max = { 42, 6 } } },
 	Bounds = { Min = { -64, -80 }, Max = { 64, 62 } },
 	SpawnFacing = 0,
 	Lighting = {
-		ClockTime = 19.5,
-		Brightness = 1.5,
-		Ambient = Color3.fromRGB(120, 110, 150),
-		OutdoorAmbient = Color3.fromRGB(120, 110, 150),
-		FogEnd = 420,
-		FogColor = Color3.fromRGB(70, 60, 96),
+		ClockTime = 15.6,
+		Brightness = 1.7,
+		Ambient = Color3.fromRGB(168, 158, 196),
+		OutdoorAmbient = Color3.fromRGB(176, 166, 206),
+		FogEnd = 1200,
+		FogColor = Color3.fromRGB(110, 100, 140),
+	},
+	BaseColor = Color3.fromRGB(100, 148, 112),
+	Grade = { Saturation = 0, Contrast = -0.04, TintColor = Color3.fromRGB(242, 238, 255) },
+	WallStyle = {
+		Outer = Color3.fromRGB(64, 84, 140), -- dark blue siding outside
+		OuterMaterial = Enum.Material.WoodPlanks,
+		Cap = Color3.fromRGB(80, 52, 44),
+		Post = Color3.fromRGB(96, 62, 50),
+		Frame = Color3.fromRGB(128, 84, 62),
+		Door = Color3.fromRGB(110, 70, 56),
+		WindowFrame = Color3.fromRGB(236, 226, 200),
 	},
 	Ground = {
-		{ Kind = "DeadGrass", Min = { -64, -80 }, Max = { 64, 62 } },
-		{ Kind = "Dirt", Min = { -4, -12 }, Max = { 6, 27 }, Top = 0.05 }, -- garden path to the truck
+		{ Kind = "DeadGrass", Min = { -64, -80 }, Max = { 64, 62 }, Color = Color3.fromRGB(100, 148, 112) },
+		{ Kind = "Dirt", Min = { -4, -12 }, Max = { 6, 8 }, Top = 0.05 }, -- garden path to the truck
 		{ Kind = "Dirt", Min = { -40, 0 }, Max = { -14, 22 }, Top = 0.05, Color = Color3.fromRGB(84, 72, 62) }, -- graveyard
 		{ Kind = "Dirt", Min = { 16, 2 }, Max = { 34, 16 }, Top = 0.05, Color = Color3.fromRGB(96, 78, 58) }, -- pumpkin patch
 	},
 	Floors = {
-		{ Kind = "CarpetRed", Min = { -44, -28 }, Max = { -10, -12 } }, -- parlour
-		{ Kind = "DarkWood", Min = { -44, -60 }, Max = { -10, -28 } }, -- dining room
-		{ Kind = "DarkWood", Min = { -10, -44 }, Max = { 12, -12 } }, -- grand hall
-		{ Kind = "DarkWood", Min = { -10, -60 }, Max = { 12, -44 }, Color = Color3.fromRGB(78, 58, 50) }, -- gallery
-		{ Kind = "Carpet", Min = { 12, -36 }, Max = { 40, -12 }, Color = Color3.fromRGB(110, 84, 130) }, -- library
-		{ Kind = "Concrete", Min = { 12, -60 }, Max = { 40, -36 }, Color = Color3.fromRGB(104, 100, 112) }, -- crypt
+		{ Kind = "CarpetRed", Min = { -44, -28 }, Max = { -10, -12 }, Color = Color3.fromRGB(176, 46, 56), Pattern = "Checker", Color2 = Color3.fromRGB(158, 38, 50), Tile = 4, Wall = green }, -- parlour
+		{ Kind = "DarkWood", Min = { -44, -60 }, Max = { -10, -28 }, Color = Color3.fromRGB(120, 62, 40), Pattern = "Parquet", Color2 = Color3.fromRGB(196, 104, 64), Tile = 4, Wall = maroon }, -- dining room
+		{ Kind = "DarkWood", Min = { -10, -44 }, Max = { 12, -12 }, Color = Color3.fromRGB(130, 66, 44), Pattern = "Planks", Color2 = Color3.fromRGB(200, 108, 68), Dir = "Z", Wall = ochre }, -- grand hall
+		{ Kind = "DarkWood", Min = { -10, -60 }, Max = { 12, -44 }, Color = Color3.fromRGB(238, 234, 226), Pattern = "Diamond", Wall = lilac }, -- gallery
+		{ Kind = "Carpet", Min = { 12, -36 }, Max = { 40, -12 }, Color = Color3.fromRGB(110, 60, 40), Pattern = "Parquet", Color2 = Color3.fromRGB(176, 96, 60), Tile = 4, Wall = teal }, -- library
+		{ Kind = "Concrete", Min = { 12, -60 }, Max = { 40, -36 }, Color = Color3.fromRGB(112, 108, 120), Pattern = "Grid", Tile = 4, Wall = stone }, -- crypt
 	},
 	Walls = {
 		-- outer walls
-		{ A = { -44, -12 }, B = { 40, -12 }, Low = true, Color = wall, CapColor = cap, Openings = {
+		{ A = { -44, -12 }, B = { 40, -12 }, Low = true, Openings = {
 			{ At = 10, Width = 7, Kind = "BreakWindow" }, -- parlour glass: piano shortcut
 			{ At = 24, Width = 5, Kind = "Window" },
 			{ At = 45, Width = 8, Kind = "Door" }, -- grand double front door
 			{ At = 58, Width = 5, Kind = "Window" },
 			{ At = 72, Width = 6, Kind = "BoardedDoor" }, -- boarded library door
 		} },
-		{ A = { -44, -60 }, B = { 40, -60 }, Color = wall, CapColor = cap, Openings = {
+		{ A = { -44, -60 }, B = { 40, -60 }, Openings = {
 			{ At = 10, Width = 5, Kind = "Window" },
 			{ At = 55, Width = 5, Kind = "Window" },
 			{ At = 70, Width = 5, Kind = "Window" },
 		} },
-		{ A = { -44, -60 }, B = { -44, -12 }, Color = wall, CapColor = cap, Openings = {
+		{ A = { -44, -60 }, B = { -44, -12 }, Openings = {
 			{ At = 16, Width = 7, Kind = "BreakWindow" }, -- dining room glass
 			{ At = 40, Width = 5, Kind = "Window" },
 		} },
-		{ A = { 40, -60 }, B = { 40, -12 }, Color = wall, CapColor = cap, Openings = {
+		{ A = { 40, -60 }, B = { 40, -12 }, Openings = {
 			{ At = 12, Width = 5, Kind = "Window" },
 			{ At = 36, Width = 5, Kind = "Window" },
 		} },
 		-- west wing: parlour / dining
-		{ A = { -44, -28 }, B = { -10, -28 }, Color = wall, CapColor = cap, Openings = {
+		{ A = { -44, -28 }, B = { -10, -28 }, Openings = {
 			{ At = 26, Width = 7, Kind = "Door" }, -- parlour <-> dining
 		} },
 		-- hall west wall: parlour door, dining door
-		{ A = { -10, -60 }, B = { -10, -12 }, Color = wall, CapColor = cap, Openings = {
+		{ A = { -10, -60 }, B = { -10, -12 }, Openings = {
 			{ At = 22, Width = 7, Kind = "Door" }, -- dining <-> hall
 			{ At = 40, Width = 7, Kind = "Door" }, -- parlour <-> hall
 		} },
 		-- hall / gallery archway
-		{ A = { -10, -44 }, B = { 12, -44 }, Color = wall, CapColor = cap, Openings = {
+		{ A = { -10, -44 }, B = { 12, -44 }, Openings = {
 			{ At = 11, Width = 9, Kind = "Gap" },
 		} },
 		-- hall east wall: crypt door (from the gallery), library door
-		{ A = { 12, -60 }, B = { 12, -12 }, Color = wall, CapColor = cap, Openings = {
+		{ A = { 12, -60 }, B = { 12, -12 }, Openings = {
 			{ At = 8, Width = 7, Kind = "Door" }, -- gallery <-> crypt
 			{ At = 36, Width = 7, Kind = "Door" }, -- hall <-> library
 		} },
 		-- library / crypt
-		{ A = { 12, -36 }, B = { 40, -36 }, Color = wall, CapColor = cap, Openings = {
+		{ A = { 12, -36 }, B = { 40, -36 }, Openings = {
 			{ At = 14, Width = 6, Kind = "BoardedDoor" }, -- crypt shortcut
 		} },
 	},
@@ -133,7 +148,7 @@ return {
 		{ Kind = "Pumpkin", Pos = { -12, -6 } },
 		{ Kind = "Pumpkin", Pos = { 14, -6 } },
 		-- graveyard
-		{ Kind = "Fence", Pos = { -27, -1 }, Length = 26 },
+		{ Kind = "Fence", Pos = { -27, -1 }, Length = 26, Color = Color3.fromRGB(70, 64, 82) },
 		{ Kind = "Tombstone", Pos = { -36, 4 } },
 		{ Kind = "Tombstone", Pos = { -30, 4 } },
 		{ Kind = "Tombstone", Pos = { -24, 4 } },
@@ -162,36 +177,43 @@ return {
 		{ Kind = "Tombstone", Pos = { -50, 6 } },
 		{ Kind = "Tombstone", Pos = { 52, 0 } },
 		-- iron fence along the lane, gap for the truck
-		{ Kind = "Fence", Pos = { -36, 29 }, Length = 44 },
-		{ Kind = "Fence", Pos = { 38, 29 }, Length = 44 },
+		{ Kind = "Fence", Pos = { -36, 29 }, Length = 44, Color = Color3.fromRGB(70, 64, 82) },
+		{ Kind = "Fence", Pos = { 38, 29 }, Length = 44, Color = Color3.fromRGB(70, 64, 82) },
 		{ Kind = "Lantern", Pos = { -14, 30 }, Color = lanternWarm },
 		{ Kind = "Lantern", Pos = { 16, 30 }, Color = lanternWarm },
 	},
-	-- parked at the end of the garden path, ramp down toward the manor
-	Truck = { Pos = { 1, 0, 33 }, Rot = 180, Length = 17, Width = 11, Height = 6 },
+	-- parked at the end of a short garden path, ramp down toward the manor door
+	Truck = { Pos = { 1, 0, 8 }, Rot = 180, Length = 19, Width = 11, Height = 6 },
 	Items = {
 		-- parlour
 		{ Kind = "Piano", Pos = { -37, -26 } },
 		{ Kind = "Armchair", Pos = { -33.5, -18.5 } },
 		{ Kind = "Armchair", Pos = { -24.5, -18.5 } },
 		{ Kind = "Vase", Pos = { -41.5, -14.5 } },
+		{ Kind = "BoxSmall", Pos = { -14, -15 } },
+		{ Kind = "Box", Pos = { -20, -24 } },
 		-- dining room
 		{ Kind = "DiningTable", Pos = { -27, -45 } },
 		{ Kind = "Chair", Pos = { -27, -40.5 }, Rot = 180 },
 		{ Kind = "Chair", Pos = { -27, -49.5 } },
 		{ Kind = "Candelabra", Pos = { -40, -56 } },
 		{ Kind = "Vase", Pos = { -14, -56 } },
+		{ Kind = "Box", Pos = { -38, -33 } },
 		-- grand hall
 		{ Kind = "Clock", Pos = { 10.4, -40 }, Rot = 90 },
+		{ Kind = "Suitcase", Pos = { 7, -18 } },
 		-- gallery
 		{ Kind = "Mirror", Pos = { -2, -58.8 } },
 		{ Kind = "Dresser", Pos = { 5, -58.2 } },
+		{ Kind = "BoxSmall", Pos = { 8, -50 } },
 		-- library
 		{ Kind = "Bookcase", Pos = { 19, -34.4 } },
 		{ Kind = "Bookcase", Pos = { 34, -34.4 } },
+		{ Kind = "BoxFlat", Pos = { 35, -18 } },
 		-- crypt
 		{ Kind = "Coffin", Pos = { 28, -48 }, Rot = 90 },
 		{ Kind = "Candelabra", Pos = { 37, -56 } },
+		{ Kind = "Box", Pos = { 18, -42 } },
 	},
 	Spawns = { { -2, -7 }, { 4, -7 }, { -2, -3 }, { 4, -3 } },
 	Hazards = {

@@ -13,7 +13,8 @@ truck is far too small. It approximates the physics; it is not a playtest.
 ## Conventions
 
 - Studs. X/Z is the ground, Y is up, the ground top is y = 0, room floors top is y = 0.1.
-- The camera looks from +Z toward -Z (tilted down ~52 degrees, turned by `Camera.Yaw`).
+- The camera looks from +Z toward -Z (tilted down ~62 degrees, turned by `Camera.Yaw`, FOV 26)
+  and frames the level's `Camera.View` rectangle plus every mover and the truck's rear.
   So the "front" of a building faces +Z, and **walls on the +Z side of rooms should be
   `Low = true`** (4 studs) so the camera can see in. Other walls are 7.5 studs and fade
   when they hide a mover.
@@ -27,15 +28,19 @@ truck is far too small. It approximates the physics; it is not a playtest.
 |---|---|
 | `Id`, `Name`, `Tagline` | id (= file name), job name, one line for the job board |
 | `Briefing` | 2-4 short tips shown before the job |
-| `Camera = { Yaw, Pitch }` | degrees; Yaw 15-35, Pitch ~52 |
+| `Camera = { Yaw, Pitch, View? }` | degrees; Yaw 15-35, Pitch ~62. `View = { Min = {x,z}, Max = {x,z} }` is the area the camera always frames (house + truck); default: the bounding box of `Floors` |
 | `Bounds = { Min = {x,z}, Max = {x,z} }` | items outside are recovered home |
 | `SpawnFacing` | degrees, 0 = movers face -Z |
-| `Lighting` | optional Lighting properties (`ClockTime`, `Brightness`, `Ambient`, `OutdoorAmbient`, `FogEnd`, `FogColor`, `ExposureCompensation`) |
+| `Lighting` | optional Lighting properties (`ClockTime`, `Brightness`, `Ambient`, `OutdoorAmbient`, `FogEnd`, `FogColor`, `ExposureCompensation`); defaults (bright, soft shadows) are in `default.project.json` |
+| `Grade` | optional colour grade `{ Saturation?, Contrast?, Brightness?, TintColor? }` for the `LevelGrade` ColorCorrectionEffect (defaults 0.04, -0.08, 0.04, warm white) |
+| `WallStyle` | optional level-wide wall look: `Outer` / `OuterMaterial` (exterior faces, e.g. brick), `Inner` (room faces without paint), `Cap` (top cap colour), `CapHeight`, `CapOverhang`, `Post` (wall-end posts, default the cap), `Frame` (door frames), `Door` (door leaves), `WindowFrame`, `Baseboard` (default: face colour, darker), `Thick` |
+| `GrassDetail` | grass tufts and flowers per 100 square studs on grassy ground (default 4; 0 = none) |
 | `BaseColor`, `BaseMaterial` | the big ground slab under everything (default grass) |
-| `Ground` | `{ Kind, Min, Max, Top?, Color?, Material? }` zones; Kind in Grass, Road (dashed line), Pavement, Concrete, Sand, Dirt, DeadGrass, Patio, Metal, Wood, Tile, Carpet. Overlapping zones need a higher `Top` (e.g. 0.05) to avoid flicker |
-| `Floors` | room floors `{ Kind, Min, Max, Color?, Material? }`, Kind in Wood, DarkWood, Tile, Carpet, CarpetRed, Concrete, Metal |
-| `Walls` | segments `{ A = {x,z}, B = {x,z}, Low?, Height?, Thick?, Color?, CapColor?, Material?, Openings? }` |
-| `Openings` | `{ At = distance of the centre from A, Width, Kind, Sill?, Top? }`, Kind: `Door` / `Gap` (open), `Window` (glass above a sill, blocks), `BreakWindow` (floor-length glass with a white cross; breaks on a hard furniture hit or a slap), `SwingDoor` (physical hinged door that swings both ways), `BoardedDoor` (planks; 3 slaps or a very hard hit) |
+| `Ground` | `{ Kind, Min, Max, Top?, Color?, Material?, Pattern?, Joints?, Kerb? }` zones; Kind in Grass, Road (white dashed line + kerbs, `Kerb = false` to drop them), Pavement (slab joints every `Tile` = 4), Concrete (joints every 8), Sand, Dirt, DeadGrass, Patio, Metal, Wood, Tile, Carpet. `Joints = false` turns joints off; any floor `Pattern` works here too. Overlapping zones need a higher `Top` (e.g. 0.05) to avoid flicker |
+| `Floors` | room floors `{ Kind, Min, Max, Color?, Material?, Pattern?, Color2?, Tile?, Wall?, WallMaterial? }`, Kind in Wood, DarkWood, Tile, Carpet, CarpetRed, Concrete, Metal. `Wall` paints every wall face that looks into this room (that is how rooms get their own colour) |
+| `Pattern` | flat decoration on a floor or ground zone (no collision): `Checker` (squares of `Tile`, default 3, in `Color2`), `Dots` (staggered polka dots, `Tile` 4, `DotSize`), `Planks` (boards `Tile` 1.5 wide, `Board` 8 long, staggered; `Dir = "X"/"Z"`), `Stripes`, `Parquet` (blocks of two boards turning each way, `Tile` 4), `SmallTile` (grout lines every `Tile` 1.6, `Line`), `Grid` (slab joints every `Tile` 8), `Diamond` (small dark diamonds on a light floor). Mind the part count (keep a level under ~2500 parts): bigger `Tile` = fewer parts |
+| `Walls` | segments `{ A = {x,z}, B = {x,z}, Low?, Height?, Thick?, Color?, CapColor?, Outer?, OuterMaterial?, ColorA?, ColorB?, Posts?, Openings? }`. Walls are thin (0.5) with a thick cap, baseboards and end posts. Each face is painted on its own: the room it looks into (`Floors[].Wall`), else `Color`, else `WallStyle.Inner`; faces outside every room take `Outer` / `WallStyle.Outer`. `ColorA` / `ColorB` force the colour of the -Z / +Z side (in the wall's own frame, A to B along +X). `Posts = false` drops the end posts |
+| `Openings` | `{ At = distance of the centre from A, Width, Kind, Sill?, Top?, Frame?, FrameColor?, Leaf?, LeafSide?, Color? }`, Kind: `Door` / `Gap` (open), `Window` (glass above a sill, blocks), `BreakWindow` (floor-length glass with a white cross; breaks on a hard furniture hit or a slap), `SwingDoor` (physical hinged door that swings both ways), `BoardedDoor` (planks; 3 slaps or a very hard hit). Doorways get wooden frame posts inside the wall (the opening keeps its width; `Frame = false` to drop them). A `Door` also gets an open door leaf (two for 7+ wide) resting flat against the wall on the side the camera sees (`LeafSide = 1/-1` to choose, `Leaf = false` for none); leaves are decoration, no collision. Windows get white frames and a sill |
 | `Props` | anchored decoration `{ Kind, Pos, Rot?, ... }` (see below); they collide |
 | `Truck` | `{ Pos = {x,0,z}, Rot, Length?, Width?, Height?, RampLength? }` Pos = centre of the rear edge; at Rot 0 the cargo runs toward -Z and the ramp toward +Z; Rot 180 = cargo toward +Z, ramp toward -Z |
 | `Items` | furniture `{ Kind, Pos = {x,z}, Rot?, Y?, Required?, Tint?, Home? }` (Required defaults to true; Y = floor height under it, default 0.1 is fine) |
@@ -44,10 +49,14 @@ truck is far too small. It approximates the physics; it is not a playtest.
 | `Awards` | `{ Gold, Silver, Bronze }` seconds. PROVISIONAL reconstruction targets; retune from playtests |
 
 ### Props
-Tree, DeadTree, Bush (`Scale`), Hedge / Fence / Counter / Shelf (`Length`, Shelf `Height`),
+Tree (`Scale`, `Color`, `TrunkColor`, `Style = "Round"`; default a stacked cypress; crowns don't
+collide and fade), DeadTree, Bush (`Scale`, `Color`), Hedge (row of round shrubs) / Fence (picket,
+`Style = "Wood"` board fence, `Color`) / Counter / Shelf (`Length`, Shelf `Height`),
 Stove, Rug (`Size = {w,d}`, `Color`; flat, no collision), Mailbox, StreetLamp, Lantern
 (`Color`, `Range`), Pallet, Forklift, Cone, Tombstone, Pumpkin, Parasol (`Color`), Bathtub,
 Fireplace, Block (`Size = {x,y,z}`, `Color`, `Material`, `Fadeable`), Sign (`Text`), Cobweb.
+Decoration only (no collision): Stones (stepping stones from `Pos` to `To = {x,z}`, `Size`,
+`Spacing`), Doormat (`Color`), FlowerBed (`Size = {w,d}`).
 
 ### Furniture kinds (`src/shared/FurnitureData.luau`, size X x Y x Z)
 Light: Box 2.3, BoxTall 2x3.1x2, Lamp, Stool, SideTable, Plant, BeachBall, Flamingo,

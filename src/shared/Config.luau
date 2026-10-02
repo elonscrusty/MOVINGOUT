@@ -130,16 +130,17 @@ Config.Hazards = {
 }
 
 Config.Camera = {
-	Pitch = 52, -- degrees down
+	Pitch = 62, -- degrees down: near top-down like the original
 	Yaw = 25, -- degrees around the up axis (levels can override)
-	FieldOfView = 34, -- restrained perspective
-	MinDistance = 100,
-	MaxDistance = 165,
-	Margin = 18, -- studs around the group of players
-	DistancePerStud = 1.05,
-	FollowSpeed = 5,
-	ZoomSpeed = 2.2,
-	ZoomDeadband = 3, -- ignore distance changes smaller than this (no zoom breathing)
+	FieldOfView = 26, -- low FOV = restrained perspective, walls barely lean
+	MinDistance = 120,
+	MaxDistance = 420,
+	Margin = 5, -- studs kept around each mover
+	ScreenPad = 0.04, -- fraction of the half-screen kept free at the edges
+	DistancePerStud = 1.05, -- preview tool fallback framing only
+	FollowSpeed = 4,
+	ZoomSpeed = 2,
+	ZoomDeadband = 6, -- ignore distance changes smaller than this (no zoom breathing)
 	FadeTransparency = 0.75,
 }
 

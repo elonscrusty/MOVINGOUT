@@ -22,7 +22,7 @@ LUNE = os.environ.get("LUNE", "/tmp/sh-tools/lune/lune")
 OUT = os.path.join(ROOT, "tools", "levels", "out")
 RES = 0.5  # grid cell in studs
 TRUCK_FLOOR = 2
-WALL_THICK = 0.8
+WALL_THICK = 0.5  # LevelBuilder default wall thickness
 
 PROPS = {  # footprint (w, d) of solid props, None = not solid
     "Counter": lambda p: (p.get("Length", 6), 2.4), "Stove": lambda p: (3, 2.4),
@@ -35,6 +35,7 @@ PROPS = {  # footprint (w, d) of solid props, None = not solid
     "Bathtub": lambda p: (3.4, 6.4), "Fireplace": lambda p: (6, 1.6),
     "Block": lambda p: (p.get("Size", [4, 4, 4])[0], p.get("Size", [4, 4, 4])[2]),
     "Sign": lambda p: (3.6, 0.3), "Rug": None, "Cobweb": None,
+    "Stones": None, "Doormat": None, "FlowerBed": None,
 }
 
 

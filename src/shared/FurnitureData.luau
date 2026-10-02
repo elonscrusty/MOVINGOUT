@@ -40,6 +40,15 @@ local K: { [string]: Kind } = {
 	Vase = { Name = "Vase", Class = "Light", Mass = 1.5, Holders = 1, Sound = "Glass", Size = Vector3.new(1.4, 2.4, 1.4) },
 	Candelabra = { Name = "Candelabra", Class = "Light", Mass = 1.5, Holders = 1, Sound = "Metal", Size = Vector3.new(1.6, 3, 1.6) },
 	Parcel = { Name = "Parcel", Class = "Light", Mass = 2, Holders = 1, Sound = "Soft", Size = Vector3.new(2.6, 1.8, 2.2) },
+	BoxSmall = { Name = "Small box", Class = "Light", Mass = 1, Holders = 1, Sound = "Soft", Size = Vector3.new(1.8, 1.5, 1.8) },
+	BoxFlat = { Name = "Flat box", Class = "Light", Mass = 1.5, Holders = 1, Sound = "Soft", Size = Vector3.new(2.8, 1.2, 2.2) },
+	Toaster = { Name = "Toaster", Class = "Light", Mass = 1.5, Holders = 1, Sound = "Metal", Size = Vector3.new(1.8, 1.4, 1.2) },
+	Guitar = { Name = "Guitar", Class = "Light", Mass = 1.5, Holders = 1, Sound = "Wood", Size = Vector3.new(1.6, 0.6, 4.2) },
+	PlantSmall = { Name = "Cactus", Class = "Light", Mass = 1, Holders = 1, Sound = "Soft", Size = Vector3.new(1.4, 2.2, 1.4) },
+	Bin = { Name = "Bin", Class = "Light", Mass = 1.5, Holders = 1, Sound = "Metal", Size = Vector3.new(1.6, 2.4, 1.6) },
+	RugRoll = { Name = "Rolled rug", Class = "Light", Mass = 2, Holders = 1, Sound = "Soft", Size = Vector3.new(4.4, 1, 1) },
+	Fan = { Name = "Fan", Class = "Light", Mass = 1.5, Holders = 1, Sound = "Metal", Size = Vector3.new(1.6, 3.6, 1.2) },
+	Suitcase = { Name = "Suitcase", Class = "Light", Mass = 2, Holders = 1, Sound = "Soft", Size = Vector3.new(2.6, 0.9, 1.8) },
 
 	-- medium
 	Chair = { Name = "Chair", Class = "Medium", Mass = 4, Holders = 2, Sound = "Wood", Size = Vector3.new(2.6, 4, 2.6) },

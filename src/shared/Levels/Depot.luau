@@ -8,25 +8,29 @@
 return {
 	Id = "Depot",
 	Name = "The Depot",
-	Camera = { Yaw = 20, Pitch = 52 },
+	Camera = { Yaw = 20, Pitch = 62, View = { Min = { -32, -38 }, Max = { 32, 22 } } },
 	Bounds = { Min = { -60, -50 }, Max = { 60, 60 } },
-	BaseColor = Color3.fromRGB(176, 176, 170),
-	BaseMaterial = Enum.Material.Concrete,
 	SpawnFacing = 0,
+	WallStyle = {
+		Outer = Color3.fromRGB(240, 128, 84), -- orange shed planks
+		OuterMaterial = Enum.Material.WoodPlanks,
+		Inner = Color3.fromRGB(246, 238, 220),
+		Cap = Color3.fromRGB(70, 66, 76),
+	},
 	Ground = {
-		{ Kind = "Grass", Min = { -60, -50 }, Max = { -34, 60 } },
-		{ Kind = "Grass", Min = { 34, -50 }, Max = { 60, 60 } },
+		{ Kind = "Concrete", Min = { -34, -40 }, Max = { 34, -14 }, Color = Color3.fromRGB(196, 196, 190) },
 		{ Kind = "Pavement", Min = { -34, -14 }, Max = { 34, 30 } },
+		{ Kind = "Road", Min = { -60, 30 }, Max = { 60, 42 } },
 	},
 	Floors = {
-		{ Kind = "Concrete", Min = { -30, -36 }, Max = { 30, -14 }, Color = Color3.fromRGB(200, 196, 188) },
+		{ Kind = "Concrete", Min = { -30, -36 }, Max = { 30, -14 }, Color = Color3.fromRGB(206, 204, 198), Pattern = "Grid", Tile = 6, Wall = Color3.fromRGB(246, 238, 220) },
 	},
 	Walls = {
 		-- the depot shed (back), with a big doorway and a practice breakable window
-		{ A = { -30, -36 }, B = { 30, -36 }, Color = Color3.fromRGB(240, 120, 80) },
-		{ A = { -30, -36 }, B = { -30, -14 }, Color = Color3.fromRGB(240, 120, 80) },
-		{ A = { 30, -36 }, B = { 30, -14 }, Color = Color3.fromRGB(240, 120, 80) },
-		{ A = { -30, -14 }, B = { 30, -14 }, Low = true, Color = Color3.fromRGB(240, 120, 80), Openings = {
+		{ A = { -30, -36 }, B = { 30, -36 } },
+		{ A = { -30, -36 }, B = { -30, -14 } },
+		{ A = { 30, -36 }, B = { 30, -14 } },
+		{ A = { -30, -14 }, B = { 30, -14 }, Low = true, Openings = {
 			{ At = 22, Width = 12, Kind = "Door" },
 			{ At = 44, Width = 7, Kind = "BreakWindow" },
 		} },

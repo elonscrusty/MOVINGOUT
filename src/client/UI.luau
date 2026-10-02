@@ -1,7 +1,8 @@
 --[[
 	UI.luau
-	Small UI kit in the game's chunky cartoon style: cream panels with dark outlines,
-	big rounded buttons, FredokaOne text. Every button is selectable with a gamepad and
+	Small UI kit in the game's chunky cartoon style: cream cards with a tan rim and a
+	sky-blue ribbon title, big rounded buttons with a soft top-lit gradient, bold white
+	FredokaOne text with a dark outline on coloured surfaces. Every button is selectable with a gamepad and
 	navigable with the keyboard (arrows / WASD + Enter) through UI.SetNav, and shows a
 	clear focus ring. Text and HUD scale with the TextScale setting.
 ]]
@@ -16,9 +17,13 @@ local UI = {}
 
 UI.Font = Enum.Font.FredokaOne
 UI.Colors = {
-	Panel = Color3.fromRGB(255, 248, 234),
-	PanelDark = Color3.fromRGB(64, 52, 78),
-	Ink = Color3.fromRGB(52, 40, 60),
+	Panel = Color3.fromRGB(253, 244, 222),
+	PanelRim = Color3.fromRGB(232, 208, 164),
+	PanelDark = Color3.fromRGB(110, 84, 64),
+	Ink = Color3.fromRGB(70, 48, 40),
+	Cream = Color3.fromRGB(244, 226, 190),
+	Sky = Color3.fromRGB(96, 198, 244),
+	SkyDark = Color3.fromRGB(28, 96, 160),
 	Yellow = Color3.fromRGB(255, 204, 64),
 	Orange = Color3.fromRGB(255, 140, 70),
 	Red = Color3.fromRGB(236, 84, 80),
@@ -104,9 +109,65 @@ function UI.Panel(parent: Instance, size: UDim2, pos: UDim2, anchor: Vector2?, c
 	f.BackgroundColor3 = color or C.Panel
 	f.BorderSizePixel = 0
 	f.Parent = parent
-	UI.Corner(f, 20)
-	UI.Stroke(f, 4)
+	UI.Corner(f, 22)
+	UI.Stroke(f, 6, C.PanelRim)
 	return f
+end
+
+-- Vertical top-lit shading for chunky surfaces (multiplies the background colour).
+function UI.Shade(obj: GuiObject, amount: number?)
+	local g = Instance.new("UIGradient")
+	local k = 1 - (amount or 0.14)
+	g.Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(k, k, k))
+	g.Rotation = 90
+	g.Parent = obj
+	return g
+end
+
+-- Bold outlined text (white with a dark contextual stroke), like the HUD numbers.
+function UI.Outlined(parent: Instance, text: string, size: UDim2, pos: UDim2, props: any?): TextLabel
+	local t = UI.Text(parent, text, size, pos, props)
+	if not (props and props.TextColor3) then
+		t.TextColor3 = C.White
+	end
+	local s = Instance.new("UIStroke")
+	s.Thickness = props and props.Outline or 3
+	s.Color = props and props.OutlineColor or C.Ink
+	s.LineJoinMode = Enum.LineJoinMode.Round
+	s.Parent = t
+	return t
+end
+
+-- A sky-blue ribbon title tag that straddles the top edge of a card.
+function UI.Banner(parent: Instance, text: string, width: number?): TextLabel
+	local b = Instance.new("Frame")
+	b.Name = "Banner"
+	b.Size = UDim2.new(width or 0.46, 0, 0, 60)
+	b.Position = UDim2.new(0.5, 0, 0, -4)
+	b.AnchorPoint = Vector2.new(0.5, 0.5)
+	b.Rotation = -1.5
+	b.BackgroundColor3 = C.Sky
+	b.ZIndex = 5
+	b.Parent = parent
+	UI.Corner(b, 14)
+	UI.Stroke(b, 5, C.White)
+	UI.Shade(b, 0.12)
+	local lim = Instance.new("UISizeConstraint")
+	lim.MinSize = Vector2.new(200, 0)
+	lim.MaxSize = Vector2.new(460, 60)
+	lim.Parent = b
+	-- folded ribbon corner
+	local fold = Instance.new("Frame")
+	fold.Size = UDim2.fromOffset(22, 22)
+	fold.Position = UDim2.new(1, -6, 1, -6)
+	fold.AnchorPoint = Vector2.new(0.5, 0.5)
+	fold.Rotation = 45
+	fold.BackgroundColor3 = C.SkyDark
+	fold.ZIndex = 4
+	fold.Parent = b
+	local t = UI.Outlined(b, text, UDim2.new(1, -24, 1, -12), UDim2.fromOffset(12, 6), { MaxText = 40, OutlineColor = C.SkyDark, Outline = 3.5, ZIndex = 6 })
+	t.Name = "BannerText"
+	return t
 end
 
 function UI.Text(parent: Instance, text: string, size: UDim2, pos: UDim2, props: any?): TextLabel
@@ -122,7 +183,7 @@ function UI.Text(parent: Instance, text: string, size: UDim2, pos: UDim2, props:
 	t.RichText = true
 	if props then
 		for k, v in props do
-			if k ~= "MaxText" then
+			if k ~= "MaxText" and k ~= "Outline" and k ~= "OutlineColor" then
 				(t :: any)[k] = v
 			end
 		end
@@ -141,6 +202,7 @@ function UI.Title(parent: Instance, text: string, size: UDim2, pos: UDim2, color
 	local s = Instance.new("UIStroke")
 	s.Thickness = 4
 	s.Color = C.Ink
+	s.LineJoinMode = Enum.LineJoinMode.Round
 	s.Parent = t
 	return t
 end
@@ -167,35 +229,56 @@ end
 
 export type Button = TextButton
 
+local function luminance(c: Color3): number
+	return 0.299 * c.R + 0.587 * c.G + 0.114 * c.B
+end
+
+-- Chunky rounded button. The visible text is a child label that mirrors b.Text, so
+-- coloured buttons get bold white text with an outline while the button keeps its rim.
 function UI.Button(parent: Instance, text: string, size: UDim2, pos: UDim2, onClick: () -> (), color: Color3?): TextButton
+	local base = color or C.Yellow
+	if base == C.White then
+		base = C.Cream -- light buttons are warm cream, like the cards
+	end
 	local b = Instance.new("TextButton")
 	b.Size = size
 	b.Position = pos
 	b.AnchorPoint = Vector2.new(0.5, 0.5)
-	b.BackgroundColor3 = color or C.Yellow
+	b.BackgroundColor3 = base
 	b.AutoButtonColor = false
 	b.Font = UI.Font
 	b.Text = text
 	b.TextColor3 = C.Ink
+	b.TextTransparency = 1
 	b.TextScaled = true
 	b.Selectable = true
 	b.SelectionImageObject = focusRing()
 	b.Parent = parent
-	UI.Corner(b, 16)
-	local stroke = UI.Stroke(b, 3)
-	local pad = Instance.new("UIPadding")
-	pad.PaddingLeft = UDim.new(0, 10)
-	pad.PaddingRight = UDim.new(0, 10)
-	pad.PaddingTop = UDim.new(0, 6)
-	pad.PaddingBottom = UDim.new(0, 6)
-	pad.Parent = b
-	local lim = Instance.new("UITextSizeConstraint")
-	lim.MaxTextSize = 30
-	lim.Parent = b
-	local base = color or C.Yellow
+	UI.Corner(b, 18)
+	local stroke = UI.Stroke(b, 3, base:Lerp(C.Ink, 0.45))
+	UI.Shade(b)
+	local light = luminance(base) > 0.72
+	local label = UI.Text(b, text, UDim2.new(1, -20, 1, -12), UDim2.fromOffset(10, 6), { MaxText = 30, TextColor3 = light and C.Ink or C.White })
+	label.Name = "Label"
+	if not light then
+		local ts = Instance.new("UIStroke")
+		ts.Thickness = 2.5
+		ts.Color = base:Lerp(C.Ink, 0.6)
+		ts.LineJoinMode = Enum.LineJoinMode.Round
+		ts.Parent = label
+	end
+	b:GetPropertyChangedSignal("Text"):Connect(function()
+		label.Text = b.Text
+	end)
+	local hovered = false
+	local function restyle()
+		stroke.Color = hovered and C.White or b.BackgroundColor3:Lerp(C.Ink, 0.45)
+		stroke.Thickness = hovered and 5 or 3
+	end
+	b:GetPropertyChangedSignal("BackgroundColor3"):Connect(restyle)
 	local function hover(on: boolean)
-		b.BackgroundColor3 = on and base:Lerp(C.White, 0.25) or base
-		stroke.Thickness = on and 4 or 3
+		hovered = on
+		restyle()
 	end
 	b.MouseEnter:Connect(function()
 		hover(true)
@@ -236,7 +319,12 @@ end
 
 function UI.SetDisabled(b: TextButton, disabled: boolean)
 	b:SetAttribute("Disabled", disabled)
-	b.TextTransparency = disabled and 0.5 or 0
+	local label = b:FindFirstChild("Label") :: TextLabel?
+	if label then
+		label.TextTransparency = disabled and 0.5 or 0
+	else
+		b.TextTransparency = disabled and 0.5 or 0
+	end
 	b.BackgroundTransparency = disabled and 0.35 or 0
 end
 

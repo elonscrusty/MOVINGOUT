@@ -1,9 +1,10 @@
 --[[
 	Hud.luau
 	In-play interface, kept to the screen edges so the playfield stays clear:
-	  top centre   job timer (freezes while paused)
-	  top left     job name, delivered / required, pause button
-	  top right    mover chips (number + symbol + colour + name)
+	  top left     cardboard-box icon + delivered / required pill, job name, pause button
+	  top right    stopwatch medal with the current award target (gold, then silver,
+	               then bronze as time passes) + the elapsed time pill with a bar that
+	               runs down toward that target (freezes while paused); mover chips below
 	  bottom       contextual hint ("[E] Grab Sofa", "[Q] Throw", ...)
 	  centre       countdown, toasts (feedback such as "Spot taken")
 	  lobby bar    JOB BOARD / LOOK / SETTINGS buttons in the depot yard
@@ -33,8 +34,14 @@ local C = UI.Colors
 local root: ScreenGui
 local timerLabel: TextLabel
 local timerPill: Frame
+local medal: Frame
+local medalInner: Frame
+local medalLabel: TextLabel
+local barFill: Frame
 local jobLabel: TextLabel
 local countLabel: TextLabel
+local countFrame: Frame
+local requiredLabel: TextLabel
 local hintLabel: TextLabel
 local hintFrame: Frame
 local chips: Frame
@@ -143,45 +150,176 @@ end
 
 ----------------------------------------------------------------------------------------
 
-local function buildTop()
-	timerPill = Instance.new("Frame")
-	timerPill.Size = UDim2.fromOffset(190, 62)
-	timerPill.Position = U(0.5, 0, 0, 10)
-	timerPill.AnchorPoint = Vector2.new(0.5, 0)
-	timerPill.BackgroundColor3 = C.Panel
-	timerPill.Parent = root
-	UI.Corner(timerPill, 30)
-	UI.Stroke(timerPill, 4)
-	UI.Scaled(timerPill)
-	timerLabel = UI.Text(timerPill, "0:00.00", U(1, -20, 1, -10), U(0, 10, 0, 5), { MaxText = 40 })
+-- Bold white numbers with a dark outline (the HUD's main type).
+local function hudText(parent: Instance, text: string, size: UDim2, pos: UDim2, maxText: number, align: Enum.TextXAlignment?, outline: Color3?): TextLabel
+	local t = UI.Outlined(parent, text, size, pos, { MaxText = maxText, TextXAlignment = align or Enum.TextXAlignment.Center, OutlineColor = outline or C.Ink, Outline = 3.5 })
+	return t
+end
 
+-- A little cardboard box drawn with frames (taped lid, shipping label).
+local function boxIcon(parent: Instance, size: number, pos: UDim2): Frame
+	local box = Instance.new("Frame")
+	box.Name = "BoxIcon"
+	box.Size = UDim2.fromOffset(size, size)
+	box.Position = pos
+	box.AnchorPoint = Vector2.new(0.5, 0.5)
+	box.Rotation = -6
+	box.BackgroundColor3 = Color3.fromRGB(214, 150, 86)
+	box.ZIndex = 3
+	box.Parent = parent
+	UI.Corner(box, 10)
+	UI.Stroke(box, 4, C.White)
+	local g = Instance.new("UIGradient")
+	g.Color = ColorSequence.new(Color3.fromRGB(255, 240, 220), Color3.fromRGB(205, 175, 150))
+	g.Rotation = 90
+	g.Parent = box
+	local lid = Instance.new("Frame")
+	lid.Size = UDim2.new(1, 0, 0.3, 0)
+	lid.BackgroundColor3 = Color3.fromRGB(236, 178, 112)
+	lid.BorderSizePixel = 0
+	lid.ZIndex = 3
+	lid.Parent = box
+	UI.Corner(lid, 10)
+	local tape = Instance.new("Frame")
+	tape.Size = UDim2.new(0.22, 0, 0.42, 0)
+	tape.Position = UDim2.fromScale(0.39, 0)
+	tape.BackgroundColor3 = Color3.fromRGB(250, 226, 180)
+	tape.BorderSizePixel = 0
+	tape.ZIndex = 4
+	tape.Parent = box
+	local label = Instance.new("Frame")
+	label.Size = UDim2.fromScale(0.34, 0.2)
+	label.Position = UDim2.fromScale(0.14, 0.62)
+	label.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	label.ZIndex = 4
+	label.Parent = box
+	UI.Corner(label, 3)
+	local stripe = Instance.new("Frame")
+	stripe.Size = UDim2.fromScale(0.6, 0.5)
+	stripe.Position = UDim2.fromScale(0.2, 0.25)
+	stripe.BackgroundColor3 = Color3.fromRGB(70, 170, 230)
+	stripe.BorderSizePixel = 0
+	stripe.ZIndex = 4
+	stripe.Parent = label
+	return box
+end
+
+local function buildTop()
+	-- top right: stopwatch medal + elapsed time pill
+	timerPill = Instance.new("Frame")
+	timerPill.Name = "Stopwatch"
+	timerPill.BackgroundTransparency = 1
+	timerPill.Size = UDim2.fromOffset(290, 100)
+	timerPill.Position = U(1, -12, 0, 10)
+	timerPill.AnchorPoint = Vector2.new(1, 0)
+	timerPill.Parent = root
+	UI.Scaled(timerPill)
+	local pill = Instance.new("Frame")
+	pill.Name = "Elapsed"
+	pill.Size = UDim2.fromOffset(212, 62)
+	pill.Position = UDim2.fromOffset(74, 10)
+	pill.BackgroundColor3 = C.Sky
+	pill.ZIndex = 1
+	pill.Parent = timerPill
+	UI.Corner(pill, 16)
+	UI.Stroke(pill, 4, C.White)
+	UI.Shade(pill, 0.18)
+	timerLabel = hudText(pill, "0:00", U(1, -56, 1, -8), U(0, 44, 0, 4), 46, Enum.TextXAlignment.Center, C.SkyDark)
+	timerLabel.ZIndex = 2
+	local bar = Instance.new("Frame")
+	bar.Name = "Bar"
+	bar.Size = UDim2.fromOffset(180, 14)
+	bar.Position = UDim2.fromOffset(100, 78)
+	bar.BackgroundColor3 = Color3.fromRGB(120, 66, 40)
+	bar.Parent = timerPill
+	UI.Corner(bar, 7)
+	UI.Stroke(bar, 3, C.White)
+	barFill = Instance.new("Frame")
+	barFill.Name = "Fill"
+	barFill.Size = UDim2.fromScale(1, 1)
+	barFill.BackgroundColor3 = C.Gold
+	barFill.BorderSizePixel = 0
+	barFill.Parent = bar
+	UI.Corner(barFill, 7)
+	for i = 1, 3 do
+		local tick = Instance.new("Frame")
+		tick.Size = UDim2.new(0, 3, 1, 0)
+		tick.Position = UDim2.fromScale(i / 4, 0)
+		tick.BackgroundColor3 = Color3.fromRGB(90, 48, 30)
+		tick.BackgroundTransparency = 0.3
+		tick.BorderSizePixel = 0
+		tick.ZIndex = 2
+		tick.Parent = bar
+	end
+	-- the stopwatch: a knob, a gold rim and an inner face with the target time
+	local knob = Instance.new("Frame")
+	knob.Size = UDim2.fromOffset(22, 16)
+	knob.Position = UDim2.fromOffset(44, 2)
+	knob.AnchorPoint = Vector2.new(0.5, 0)
+	knob.BackgroundColor3 = C.Gold
+	knob.ZIndex = 2
+	knob.Parent = timerPill
+	UI.Corner(knob, 5)
+	UI.Stroke(knob, 3, C.White)
+	medal = Instance.new("Frame")
+	medal.Name = "Medal"
+	medal.Size = UDim2.fromOffset(84, 84)
+	medal.Position = UDim2.fromOffset(44, 54)
+	medal.AnchorPoint = Vector2.new(0.5, 0.5)
+	medal.BackgroundColor3 = C.Gold
+	medal.ZIndex = 3
+	medal.Parent = timerPill
+	UI.Corner(medal, 999)
+	UI.Stroke(medal, 4, C.White)
+	UI.Shade(medal, 0.12)
+	medalInner = Instance.new("Frame")
+	medalInner.Size = UDim2.fromScale(0.76, 0.76)
+	medalInner.Position = UDim2.fromScale(0.5, 0.5)
+	medalInner.AnchorPoint = Vector2.new(0.5, 0.5)
+	medalInner.BackgroundColor3 = Color3.fromRGB(226, 144, 24)
+	medalInner.ZIndex = 4
+	medalInner.Parent = medal
+	UI.Corner(medalInner, 999)
+	local star = UI.Text(medalInner, "★", UDim2.fromScale(1.05, 1.05), UDim2.fromScale(-0.025, -0.06), { MaxText = 80, TextColor3 = Color3.fromRGB(255, 255, 255), TextTransparency = 0.72, ZIndex = 5 })
+	star.Name = "Star"
+	medalLabel = hudText(medalInner, "", U(1, 4, 0.6, 0), U(0, -2, 0.2, 0), 26, Enum.TextXAlignment.Center, Color3.fromRGB(110, 60, 10))
+	medalLabel.ZIndex = 6
+
+	-- top left: box counter pill, job name, pause button
 	topLeft = Instance.new("Frame")
 	topLeft.BackgroundTransparency = 1
-	topLeft.Size = UDim2.fromOffset(300, 110)
+	topLeft.Size = UDim2.fromOffset(330, 112)
 	topLeft.Position = U(0, 10, 0, 62) -- below Roblox's top bar buttons
 	topLeft.Parent = root
 	UI.Scaled(topLeft)
-	pauseButton = UI.Button(topLeft, "II", UDim2.fromOffset(56, 56), UDim2.fromOffset(30, 30), function()
+	countFrame = Instance.new("Frame")
+	countFrame.Name = "Counter"
+	countFrame.Size = UDim2.fromOffset(176, 60)
+	countFrame.Position = UDim2.fromOffset(52, 10)
+	countFrame.BackgroundColor3 = Color3.fromRGB(255, 140, 96)
+	countFrame.Parent = topLeft
+	UI.Corner(countFrame, 16)
+	UI.Stroke(countFrame, 4, C.White)
+	local g = Instance.new("UIGradient")
+	g.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 200, 190))
+	g.Rotation = 0
+	g.Parent = countFrame
+	countLabel = hudText(countFrame, "", U(0.5, -14, 1, -6), U(0, 40, 0, 3), 46, Enum.TextXAlignment.Right, Color3.fromRGB(120, 50, 30))
+	requiredLabel = hudText(countFrame, "", U(0.5, -14, 0.62, 0), U(0.5, 26, 0.34, 0), 28, Enum.TextXAlignment.Left, Color3.fromRGB(120, 50, 30))
+	boxIcon(topLeft, 72, UDim2.fromOffset(42, 40))
+	jobLabel = hudText(topLeft, "", UDim2.fromOffset(250, 26), UDim2.fromOffset(10, 78), 20, Enum.TextXAlignment.Left)
+	pauseButton = UI.Button(topLeft, "II", UDim2.fromOffset(54, 54), UDim2.fromOffset(268, 40), function()
 		if State.Phase() == "Playing" then
 			Net.Action:FireServer("Pause")
 		elseif State.Phase() == "Lobby" then
 			Menus.Open("Settings")
 		end
 	end, C.White)
-	local info = Instance.new("Frame")
-	info.Size = UDim2.fromOffset(230, 92)
-	info.Position = UDim2.fromOffset(66, 0)
-	info.BackgroundColor3 = C.Panel
-	info.Parent = topLeft
-	UI.Corner(info, 16)
-	UI.Stroke(info, 3)
-	jobLabel = UI.Text(info, "", U(1, -16, 0.4, 0), U(0, 8, 0, 4), { TextXAlignment = Enum.TextXAlignment.Left, MaxText = 22 })
-	countLabel = UI.Text(info, "", U(1, -16, 0.5, 0), U(0, 8, 0.44, 0), { TextXAlignment = Enum.TextXAlignment.Left, MaxText = 32, TextColor3 = C.Orange })
 
 	chips = Instance.new("Frame")
 	chips.BackgroundTransparency = 1
 	chips.Size = UDim2.fromOffset(200, 200)
-	chips.Position = U(1, -10, 0, 62)
+	chips.Position = U(1, -10, 0, 118)
 	chips.AnchorPoint = Vector2.new(1, 0)
 	chips.Parent = root
 	UI.Scaled(chips)
@@ -190,6 +328,52 @@ local function buildTop()
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
 	layout.SortOrder = Enum.SortOrder.Name
 	layout.Parent = chips
+end
+
+local MEDALS = {
+	{ Name = "Gold", Rim = Color3.fromRGB(255, 200, 50), Face = Color3.fromRGB(226, 144, 24), Ink = Color3.fromRGB(110, 60, 10) },
+	{ Name = "Silver", Rim = Color3.fromRGB(214, 224, 236), Face = Color3.fromRGB(150, 166, 188), Ink = Color3.fromRGB(60, 70, 90) },
+	{ Name = "Bronze", Rim = Color3.fromRGB(232, 156, 96), Face = Color3.fromRGB(176, 98, 52), Ink = Color3.fromRGB(80, 40, 20) },
+}
+
+local function clockText(seconds: number): string
+	seconds = math.max(0, math.floor(seconds))
+	return string.format("%d:%02d", seconds // 60, seconds % 60)
+end
+
+-- Medal shows the next award still reachable; the bar runs down toward it.
+local function updateStopwatch(t: number, job: any)
+	if not job or not job.Awards then
+		medal.Visible = false
+		local bar = barFill.Parent :: Frame
+		bar.Visible = false
+		return
+	end
+	medal.Visible = true
+	local bar = barFill.Parent :: Frame
+	bar.Visible = true
+	local scale = (State.Game():GetAttribute("AssistTimeScale") :: number?) or 1
+	local prev = 0
+	for _, m in MEDALS do
+		local target = (job.Awards[m.Name] or 0) * scale
+		if t <= target then
+			medal.BackgroundColor3 = m.Rim
+			medalInner.BackgroundColor3 = m.Face
+			barFill.BackgroundColor3 = m.Rim
+			local stroke = medalLabel:FindFirstChildOfClass("UIStroke")
+			if stroke then
+				stroke.Color = m.Ink
+			end
+			medalLabel.Text = clockText(target)
+			barFill.Size = UDim2.fromScale(math.clamp(1 - (t - prev) / math.max(target - prev, 1), 0, 1), 1)
+			return
+		end
+		prev = target
+	end
+	medal.BackgroundColor3 = C.Grey
+	medalInner.BackgroundColor3 = Color3.fromRGB(150, 146, 156)
+	medalLabel.Text = "--"
+	barFill.Size = UDim2.fromScale(0, 1)
 end
 
 local function refreshChips()
@@ -208,9 +392,10 @@ local function refreshChips()
 			f.BackgroundColor3 = info.Color
 			f.Parent = chips
 			UI.Corner(f, 18)
-			UI.Stroke(f, 3)
+			UI.Stroke(f, 3, C.White)
+			UI.Shade(f, 0.15)
 			local leader = State.Game():GetAttribute("Leader") == p.UserId
-			UI.Text(f, string.format("%s %s  %s%s", info.Name, info.Symbol, p.DisplayName, leader and "  ★" or ""), U(1, -16, 1, -6), U(0, 8, 0, 3), { TextColor3 = C.White, TextXAlignment = Enum.TextXAlignment.Left, MaxText = 20, TextStrokeTransparency = 0.4 })
+			UI.Outlined(f, string.format("%s %s  %s%s", info.Name, info.Symbol, p.DisplayName, leader and "  ★" or ""), U(1, -16, 1, -6), U(0, 8, 0, 3), { TextXAlignment = Enum.TextXAlignment.Left, MaxText = 20, Outline = 2, OutlineColor = info.Color:Lerp(C.Ink, 0.6) })
 		end
 	end
 end
@@ -366,16 +551,31 @@ local function update()
 	timerPill.Visible = visibleHud and (inJob or phase == "Results")
 	local running = game_:GetAttribute("TimerRunning")
 	local t = running and (Workspace:GetServerTimeNow() - ((game_:GetAttribute("TimerOrigin") :: number?) or 0)) or ((game_:GetAttribute("TimerValue") :: number?) or 0)
-	timerLabel.Text = UI.FormatTime(math.max(0, t))
+	t = math.max(0, t)
+	timerLabel.Text = clockText(t)
 
 	-- job info
 	topLeft.Visible = joined and menu == nil
 	local jobId = game_:GetAttribute("JobId")
 	local job = Jobs.ById[jobId or ""]
+	updateStopwatch(t, job)
 	jobLabel.Text = job and job.Name or "The Depot (practice)"
 	local d = (game_:GetAttribute("Delivered") :: number?) or 0
 	local r = (game_:GetAttribute("Required") :: number?) or 0
-	countLabel.Text = job and string.format("In truck: %d / %d", d, r) or "Try the truck!"
+	if job then
+		countLabel.Size = U(0.5, -14, 1, -6)
+		countLabel.Text = tostring(d)
+		requiredLabel.Text = "/" .. tostring(r)
+	else
+		countLabel.Size = U(1, -48, 0.7, 0)
+		countLabel.Text = "Practice!"
+		requiredLabel.Text = ""
+	end
+	if job and r > 0 and d >= r then
+		countFrame.BackgroundColor3 = Color3.fromRGB(110, 210, 110)
+	else
+		countFrame.BackgroundColor3 = Color3.fromRGB(255, 140, 96)
+	end
 	pauseButton.Text = phase == "Playing" and "II" or "⚙"
 
 	chips.Visible = joined and menu == nil
@@ -439,8 +639,8 @@ function Hud.Init()
 			end)
 		elseif kind == "Deliver" and data.Delivered then
 			advance("Deliver")
-			local sc = countLabel:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
-			sc.Parent = countLabel
+			local sc = countFrame:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
+			sc.Parent = countFrame
 			sc.Scale = 1.3
 			TweenService:Create(sc, TweenInfo.new(0.3, Enum.EasingStyle.Back), { Scale = 1 }):Play()
 		elseif kind == "Break" then

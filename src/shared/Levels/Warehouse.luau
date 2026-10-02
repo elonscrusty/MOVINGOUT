@@ -13,9 +13,9 @@
 	Level data format: see docs/LEVELS.md.
 ]]
 
-local wall = Color3.fromRGB(96, 120, 160)
-local cap = Color3.fromRGB(246, 196, 50)
-local inner = Color3.fromRGB(200, 204, 210)
+local grey = Color3.fromRGB(206, 210, 212)
+local cream = Color3.fromRGB(240, 228, 190)
+local sage = Color3.fromRGB(176, 206, 186)
 
 return {
 	Id = "Warehouse",
@@ -27,55 +27,63 @@ return {
 		"Big crates and the washer are heavy: grab a friend, or drag them.",
 		"The packing room's boarded side door is a shortcut to the yard.",
 	},
-	Camera = { Yaw = 25, Pitch = 52 },
+	Camera = { Yaw = 25, Pitch = 62, View = { Min = { -38, -48 }, Max = { 42, 4 } } },
 	Bounds = { Min = { -50, -60 }, Max = { 80, 20 } },
-	BaseColor = Color3.fromRGB(150, 150, 146),
-	BaseMaterial = Enum.Material.Concrete,
 	SpawnFacing = 0,
-	Lighting = { ClockTime = 11 },
+	Lighting = { ClockTime = 12 },
+	WallStyle = {
+		Outer = Color3.fromRGB(184, 92, 70), -- red brick outside
+		OuterMaterial = Enum.Material.Brick,
+		Inner = grey,
+		Cap = Color3.fromRGB(70, 72, 82),
+		Frame = Color3.fromRGB(150, 156, 164),
+		Door = Color3.fromRGB(120, 132, 148),
+	},
 	Ground = {
-		{ Kind = "Concrete", Min = { 24, -40 }, Max = { 70, 6 }, Color = Color3.fromRGB(172, 170, 160) }, -- loading yard
+		{ Kind = "Concrete", Min = { 24, -40 }, Max = { 70, 6 }, Color = Color3.fromRGB(184, 184, 178) }, -- loading yard
 		{ Kind = "Pavement", Min = { -40, 0 }, Max = { 24, 6 } }, -- front apron
+		{ Kind = "Pavement", Min = { -40, -50 }, Max = { -36, 0 } }, -- side path
+		{ Kind = "Road", Min = { -50, 6 }, Max = { 80, 18 } }, -- service road (decor)
 	},
 	Floors = {
-		{ Kind = "Concrete", Min = { -36, -46 }, Max = { 4, -16 }, Color = Color3.fromRGB(196, 194, 186) }, -- storage bay
-		{ Kind = "Carpet", Min = { -36, -16 }, Max = { -18, 0 }, Color = Color3.fromRGB(120, 140, 180) }, -- office
-		{ Kind = "Metal", Min = { 4, -46 }, Max = { 24, -22 }, Color = Color3.fromRGB(160, 168, 176) }, -- packing room
-		{ Kind = "Concrete", Min = { -18, -16 }, Max = { 4, 0 }, Color = Color3.fromRGB(214, 206, 170) }, -- dispatch hall (west)
-		{ Kind = "Concrete", Min = { 4, -22 }, Max = { 24, 0 }, Color = Color3.fromRGB(214, 206, 170) }, -- dispatch hall (east)
+		{ Kind = "Concrete", Min = { -36, -46 }, Max = { 4, -16 }, Color = Color3.fromRGB(170, 174, 178), Pattern = "Grid", Tile = 8 }, -- storage bay
+		{ Kind = "Carpet", Min = { -36, -16 }, Max = { -18, 0 }, Color = Color3.fromRGB(104, 128, 176), Pattern = "Checker", Color2 = Color3.fromRGB(92, 114, 160), Tile = 3, Wall = cream }, -- office
+		{ Kind = "Metal", Min = { 4, -46 }, Max = { 24, -22 }, Color = Color3.fromRGB(150, 158, 168), Pattern = "Grid", Tile = 4, Wall = sage }, -- packing room
+		{ Kind = "Concrete", Min = { -18, -16 }, Max = { 4, 0 }, Color = Color3.fromRGB(196, 196, 190), Pattern = "Grid", Tile = 6 }, -- dispatch hall (west)
+		{ Kind = "Concrete", Min = { 4, -22 }, Max = { 24, 0 }, Color = Color3.fromRGB(196, 196, 190), Pattern = "Grid", Tile = 6 }, -- dispatch hall (east)
 	},
 	Walls = {
 		-- outer walls
-		{ A = { -36, -46 }, B = { 24, -46 }, Color = wall, CapColor = cap, Openings = {
+		{ A = { -36, -46 }, B = { 24, -46 }, Openings = {
 			{ At = 18, Width = 6, Kind = "Window", Sill = 3.5 },
 			{ At = 50, Width = 6, Kind = "Window", Sill = 3.5 },
 		} },
-		{ A = { -36, -46 }, B = { -36, 0 }, Color = wall, CapColor = cap, Openings = {
+		{ A = { -36, -46 }, B = { -36, 0 }, Openings = {
 			{ At = 38, Width = 5, Kind = "Window" },
 		} },
-		{ A = { 24, -46 }, B = { 24, 0 }, Color = wall, CapColor = cap, Openings = {
+		{ A = { 24, -46 }, B = { 24, 0 }, Openings = {
 			{ At = 12, Width = 6, Kind = "BoardedDoor" }, -- packing room side door: shortcut to the yard
 			{ At = 34, Width = 8, Kind = "Door" }, -- loading door
 			{ At = 42, Width = 4.4, Kind = "Gap" }, -- dispatch belt hatch
 		} },
-		{ A = { -36, 0 }, B = { 24, 0 }, Low = true, Color = wall, CapColor = cap, Openings = {
+		{ A = { -36, 0 }, B = { 24, 0 }, Low = true, Openings = {
 			{ At = 9, Width = 6, Kind = "Window" },
 			{ At = 34, Width = 8, Kind = "Window" },
 			{ At = 50, Width = 6, Kind = "Window" },
 		} },
 		-- interior walls
-		{ A = { -36, -16 }, B = { 4, -16 }, Low = true, Color = inner, CapColor = cap, Openings = {
+		{ A = { -36, -16 }, B = { 4, -16 }, Low = true, Openings = {
 			{ At = 9, Width = 5, Kind = "Door" }, -- storage <-> office
 			{ At = 28, Width = 8, Kind = "Gap" }, -- storage <-> hall
 		} },
-		{ A = { 4, -46 }, B = { 4, -16 }, Color = inner, CapColor = cap, Openings = {
+		{ A = { 4, -46 }, B = { 4, -16 }, Openings = {
 			{ At = 16, Width = 5, Kind = "Door" }, -- tight storage <-> packing door
 		} },
-		{ A = { 4, -22 }, B = { 24, -22 }, Low = true, Color = inner, CapColor = cap, Openings = {
+		{ A = { 4, -22 }, B = { 24, -22 }, Low = true, Openings = {
 			{ At = 10, Width = 6, Kind = "Door" }, -- packing room -> hall
 			{ At = 15.6, Width = 4.4, Kind = "Gap" }, -- packing belt hatch
 		} },
-		{ A = { -18, -16 }, B = { -18, 0 }, Color = inner, CapColor = cap, Openings = {
+		{ A = { -18, -16 }, B = { -18, 0 }, Openings = {
 			{ At = 8, Width = 5, Kind = "Door" }, -- office -> hall
 		} },
 	},
@@ -99,17 +107,23 @@ return {
 		{ Kind = "Forklift", Pos = { 40, -31 }, Rot = 90 },
 		{ Kind = "Pallet", Pos = { 34, -28.5 } },
 		{ Kind = "Block", Pos = { 26.6, -20 }, Size = { 3, 3, 3 }, Color = Color3.fromRGB(196, 150, 96), Material = Enum.Material.WoodPlanks },
-		{ Kind = "Block", Pos = { 33.5, -23.5 }, Size = { 2.5, 2.5, 2.5 }, Color = Color3.fromRGB(196, 150, 96), Material = Enum.Material.WoodPlanks },
-		{ Kind = "Cone", Pos = { 39.5, -11.5 } },
-		{ Kind = "Cone", Pos = { 46, -11 } },
+		{ Kind = "Block", Pos = { 37.5, -26.8 }, Size = { 2.5, 2.5, 2.5 }, Color = Color3.fromRGB(196, 150, 96), Material = Enum.Material.WoodPlanks },
+		{ Kind = "Cone", Pos = { 39, -9 } },
+		{ Kind = "Cone", Pos = { 46, -9 } },
 		{ Kind = "Fence", Pos = { 47, -38 }, Length = 46 },
 		{ Kind = "Fence", Pos = { 62, 4 }, Length = 16 },
 		{ Kind = "StreetLamp", Pos = { 30, 3 } },
 		{ Kind = "StreetLamp", Pos = { 30, -36 } },
 		{ Kind = "Sign", Pos = { 50, -7 }, Text = "BAY 3" },
+		{ Kind = "Tree", Pos = { -44, -10 } },
+		{ Kind = "Tree", Pos = { -44, -36 }, Scale = 1.1 },
+		{ Kind = "Tree", Pos = { 2, -54 }, Style = "Round" },
+		{ Kind = "Tree", Pos = { 64, -46 } },
+		{ Kind = "Bush", Pos = { -30, 3 }, Scale = 0.8 },
+		{ Kind = "Bush", Pos = { 18, 3.2 }, Scale = 0.8 },
 	},
 	-- backed up to the yard from the east: cargo runs toward +X, ramp down toward -X
-	Truck = { Pos = { 44, 0, -20 }, Rot = -90, Length = 18, Width = 11, Height = 6 },
+	Truck = { Pos = { 40, 0, -18 }, Rot = -90, Length = 19, Width = 11, Height = 6 },
 	Items = {
 		-- storage bay
 		{ Kind = "Crate", Pos = { -25, -38 } },
@@ -118,28 +132,35 @@ return {
 		{ Kind = "Barrel", Pos = { -5, -27 } },
 		{ Kind = "Toolbox", Pos = { -25, -28 } },
 		{ Kind = "Parcel", Pos = { -15, -41 } },
+		{ Kind = "BoxSmall", Pos = { -25, -44 } },
+		{ Kind = "Box", Pos = { -5, -33 } },
 		-- office
 		{ Kind = "Bookcase", Pos = { -32, -14.4 } },
 		{ Kind = "Dresser", Pos = { -34.2, -6 }, Rot = 90 },
 		{ Kind = "Chair", Pos = { -27, -7 }, Rot = 180 },
 		{ Kind = "Box", Pos = { -21, -12 } },
+		{ Kind = "BoxFlat", Pos = { -31, -2 } },
+		{ Kind = "Bin", Pos = { -21, -3 } },
 		-- packing room
 		{ Kind = "BigCrate", Pos = { 9.5, -40 } },
 		{ Kind = "BigCrate", Pos = { 13, -28 } },
 		{ Kind = "Washer", Pos = { 13.5, -35 } },
 		{ Kind = "Parcel", Pos = { 22.4, -41 }, Rot = 90 },
 		{ Kind = "Toolbox", Pos = { 22.4, -26 }, Rot = 90 },
+		{ Kind = "Box", Pos = { 8, -25 } },
+		{ Kind = "BoxSmall", Pos = { 8, -34 } },
 		-- dispatch hall
 		{ Kind = "Crate", Pos = { -10, -9 } },
+		{ Kind = "BoxTall", Pos = { 14, -8 } },
 	},
 	Spawns = { { 6, -12 }, { 10, -12 }, { 6, -16 }, { 10, -16 } },
 	Hazards = {
 		-- packing belt: packing room -> hall (crossing it in the hall drags you toward +Z)
 		{ Kind = "Conveyor", Min = { 18, -42 }, Max = { 21, -14 }, Dir = { 0, 1 }, Speed = 6 },
 		-- dispatch belt: along the front of the hall, out through the hatch ...
-		{ Kind = "Conveyor", Min = { -14, -5.5 }, Max = { 34, -2.5 }, Dir = { 1, 0 }, Speed = 7 },
+		{ Kind = "Conveyor", Min = { -14, -5.5 }, Max = { 34.5, -2.5 }, Dir = { 1, 0 }, Speed = 7 },
 		-- ... and round the corner to the foot of the truck ramp
-		{ Kind = "Conveyor", Min = { 34, -14 }, Max = { 37, -2.5 }, Dir = { 0, -1 }, Speed = 7 },
+		{ Kind = "Conveyor", Min = { 31.5, -14 }, Max = { 34.5, -2.5 }, Dir = { 0, -1 }, Speed = 7 },
 		-- yard belt: runs across the path from the loading door to the ramp
 		{ Kind = "Conveyor", Min = { 28, -34 }, Max = { 31, -8 }, Dir = { 0, -1 }, Speed = 8 },
 	},
