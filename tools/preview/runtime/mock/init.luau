@@ -17,6 +17,8 @@ require("@self/instance")
 require("@self/classes/core")
 require("@self/classes/world")
 require("@self/classes/services")
+require("@self/classes/character")
+require("@self/classes/physics")
 local T = require("@self/text")
 local L = require("@self/layout")
 local E = require("@self/exporter")
@@ -123,6 +125,36 @@ end
 -- Scene API (global `preview` in scenes)
 ------------------------------------------------------------------------------------------
 
+local PLAYER_MODULE_SOURCE = [[
+local controls = {}
+script:SetAttribute("ControlsEnabled", true)
+function controls:Enable(on)
+	if on == nil then
+		on = true
+	end
+	script:SetAttribute("ControlsEnabled", on)
+end
+function controls:Disable()
+	script:SetAttribute("ControlsEnabled", false)
+end
+function controls:GetMoveVector()
+	return Vector3.zero
+end
+function controls:GetActiveController()
+	return nil
+end
+function controls:SelectComputerMovementModule() end
+function controls:SelectTouchModule() end
+local PlayerModule = {}
+function PlayerModule:GetControls()
+	return controls
+end
+function PlayerModule:GetCameras()
+	return {}
+end
+return PlayerModule
+]]
+
 function Mock.api()
 	local api = {}
 	api.device = R.options.device
@@ -154,15 +186,31 @@ function Mock.api()
 	end
 
 	-- Another player in the server (teammates for co-op scenes): a Player under Players
-	-- with a name, DisplayName and UserId; no PlayerGui / scripts (it is not this client).
+	-- with a name, DisplayName and UserId (PlayerAdded fires); it runs no client scripts.
 	function api.addPlayer(name: string, userId: number)
 		local p = R.create("Player")
 		local pst = states[p]
 		pst.name = name
 		pst.props.UserId = userId
 		pst.props.DisplayName = name
+		for _, cls in ipairs({ "PlayerGui", "PlayerScripts", "Backpack" }) do
+			local c = R.create(cls)
+			states[c].name = cls
+			R.setParent(c, states[c], p)
+		end
 		R.setParent(p, pst, R.services.Players)
+		R.fire(states[R.services.Players], "PlayerAdded", p)
 		return p
+	end
+
+	-- A client -> server RemoteEvent call from any Player (the real RemoteEvent's
+	-- OnServerEvent fires with that player). `remote` is an Instance or a name under
+	-- ReplicatedStorage.Remotes.
+	function api.fireServerAs(player, remote, ...)
+		if type(remote) == "string" then
+			remote = api.remote(remote)
+		end
+		R.fire(states[remote], "OnServerEvent", player, ...)
 	end
 
 	function api.playerGui()
@@ -173,14 +221,15 @@ function Mock.api()
 		return R.requireModule(inst)
 	end
 
-	-- ReplicatedStorage.Shared.<name> / ServerScriptService.Modules.<name>
+	-- ReplicatedStorage.Shared.<name> / ServerScriptService.Server.<name> (the same module
+	-- tables the running game uses: requires are cached per ModuleScript)
 	function api.shared(name: string)
 		local shared = R.findChild(states[R.services.ReplicatedStorage], "Shared")
 		return R.requireModule(R.findChild(states[shared], name) or error("no shared module " .. name))
 	end
 
 	function api.server(name: string)
-		local modules = R.findChild(states[R.services.ServerScriptService], "Modules")
+		local modules = R.findChild(states[R.services.ServerScriptService], "Server")
 		local m = modules and R.findChild(states[modules], name)
 		if not m then
 			error("no server module " .. name)
@@ -208,6 +257,15 @@ function Mock.api()
 	function api.startClient(runScripts: boolean?)
 		local sps = R.findChild(states[R.services.StarterPlayer], "StarterPlayerScripts")
 		local ps = R.findChild(states[R.localPlayer], "PlayerScripts")
+		-- Roblox's default PlayerModule (stub: GetControls():Enable / Disable are tracked
+		-- for the touch-controls ghost; no camera or movement scripts)
+		if not R.findChild(states[ps], "PlayerModule") then
+			local pm = R.create("ModuleScript")
+			states[pm].name = "PlayerModule"
+			states[pm].x.source = PLAYER_MODULE_SOURCE
+			states[pm].x.path = "PlayerModule (preview stub)"
+			R.setParent(pm, states[pm], ps)
+		end
 		for _, c in ipairs(states[sps].children) do
 			local copy = R.clone(c)
 			R.setParent(copy, states[copy], ps)
@@ -222,7 +280,7 @@ function Mock.api()
 		end
 	end
 
-	-- Runs the server Scripts (GameServer) - the full server; needs more mocking.
+	-- Runs the server Scripts (ServerScriptService.Server = src/server/init.server.luau).
 	function api.startServer()
 		R.walk(R.services.ServerScriptService, function(d)
 			local st = states[d]

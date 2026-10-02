@@ -720,6 +720,7 @@ end
 
 function Menus.Init()
 	root = UI.Root("Menus", 20)
+	root.ScreenInsets = Enum.ScreenInsets.None -- the dimmer covers the notch strips too
 	buildTitle()
 	buildLook()
 	buildBoard()

@@ -276,6 +276,10 @@ local function setPropertyFromJson(inst, key: string, value)
 	local st = states[inst]
 	local p = st.info.props[key]
 	if not p then
+		if key == "Technology" then
+			R.note("Lighting.Technology is not modelled (shadow-map style lighting is always drawn)")
+			return
+		end
 		R.warn(string.format("project property %s.%s is unknown to the preview mock (ignored)", st.info.name, key))
 		return
 	end

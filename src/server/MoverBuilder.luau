@@ -9,6 +9,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Movers = require(ReplicatedStorage.Shared.Movers)
+local Shapes = require(ReplicatedStorage.Shared.Shapes)
 
 local MoverBuilder = {}
 
@@ -22,10 +23,12 @@ local smooth = Enum.Material.SmoothPlastic
 local function piece(folder: Folder, anchor: BasePart, size: Vector3, offset: CFrame, color: Color3, shape: Enum.PartType?, material: Enum.Material?): Part
 	local p = Instance.new("Part")
 	p.Name = "Costume"
-	if shape then
+	p.Size = size
+	if shape == Ball then
+		Shapes.Ball(p)
+	elseif shape then
 		p.Shape = shape
 	end
-	p.Size = size
 	p.Color = color
 	p.Material = material or smooth
 	p.CanCollide = false
@@ -149,6 +152,7 @@ function MoverBuilder.Dress(character: Model, styleIndex: number, slotColor: Col
 		local gui = Instance.new("SurfaceGui")
 		gui.Name = "BadgeGui"
 		gui.Face = Enum.NormalId.Front
+		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
 		gui.PixelsPerStud = 60
 		gui.Parent = badge
 		local label = Instance.new("TextLabel")

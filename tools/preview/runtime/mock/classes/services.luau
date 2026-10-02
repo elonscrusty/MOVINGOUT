@@ -40,9 +40,6 @@ R.defineClass("Players", {
 			end
 			return out
 		end,
-		GetNameFromUserIdAsync = function(_, id)
-			return "Hero" .. tostring(id)
-		end,
 		GetPlayerByUserId = function(p, id)
 			for _, c in ipairs(p:GetPlayers()) do
 				if c.UserId == id then

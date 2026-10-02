@@ -171,6 +171,9 @@ function S.step(dt)
 		hooks.render(dt)
 	end
 	resumeDue()
+	if hooks.physics then
+		hooks.physics(dt)
+	end
 	if hooks.simulate then
 		hooks.simulate(dt)
 	end

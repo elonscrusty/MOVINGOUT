@@ -65,6 +65,7 @@ local function makeRing(slot: number): (Part, TextLabel, UIStroke)
 	ring.Parent = folder
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Top
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
 	gui.PixelsPerStud = 40
 	gui.LightInfluence = 0
 	gui.Parent = ring

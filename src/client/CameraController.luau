@@ -112,7 +112,13 @@ function CameraController.Init()
 			targetDistance = 110
 		elseif #positions > 0 then
 			local minV, maxV = positions[1], positions[1]
-			for _, p in positions do
+			-- keep the truck's rear in view too, so the goal is always on screen
+			local truck = game_:GetAttribute("TruckPos")
+			local framing = table.clone(positions)
+			if typeof(truck) == "Vector3" then
+				table.insert(framing, truck)
+			end
+			for _, p in framing do
 				minV = minV:Min(p)
 				maxV = maxV:Max(p)
 			end

@@ -106,6 +106,7 @@ local function load(data: any, isJob: boolean)
 	local st = state()
 	st:SetAttribute("JobId", isJob and data.Id or "")
 	st:SetAttribute("JobName", data.Name)
+	st:SetAttribute("TruckPos", built.Truck.Rear.Position)
 	st:SetAttribute("CameraYaw", data.Camera and data.Camera.Yaw or Config.Camera.Yaw)
 	st:SetAttribute("CameraPitch", data.Camera and data.Camera.Pitch or Config.Camera.Pitch)
 	timerAccum = 0

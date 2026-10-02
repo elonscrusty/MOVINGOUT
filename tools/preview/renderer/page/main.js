@@ -7,6 +7,7 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { addParts, addLights, addSunAndAmbient, fitShadow, skyMesh, addSprites, addBeams, addHighlights, cframeMatrix, srgb, worldWarnings } from './world.js';
 import { paintGui, paintOverlays, usedFonts } from './gui.js';
+import { addSurfaces, usedSurfaceFonts } from './surface.js';
 
 
 // Roblox ColorCorrectionEffect, applied to display (sRGB) colours.
@@ -68,6 +69,7 @@ async function loadFonts(families) {
   await document.fonts.ready;
 }
 
+let vpBalls = 'ellipsoid';
 async function renderViewports(viewports, dpr) {
   const out = {};
   if (!viewports || !viewports.length) return out;
@@ -82,7 +84,7 @@ async function renderViewports(viewports, dpr) {
     renderer.setSize(Math.round(w), Math.round(h), false);
     renderer.setClearColor(0x000000, 0);
     const scene = new THREE.Scene();
-    await addParts(scene, vp.parts, { quiet: true });
+    await addParts(scene, vp.parts, { quiet: true, balls: vpBalls });
     // ViewportFrame lighting: Ambient + one directional LightColor / LightDirection
     scene.add(new THREE.AmbientLight(srgb(vp.ambient), 1.4));
     const light = new THREE.DirectionalLight(srgb(vp.lightColor), 2.0);
@@ -112,7 +114,7 @@ async function render() {
   const d = job.device;
   const W = d.width, H = d.height, dpr = d.dpr || 1;
 
-  const fontsReady = loadFonts(usedFonts(job.gui.layers));
+  const fontsReady = loadFonts([...usedFonts(job.gui.layers), ...usedSurfaceFonts(job.gui.surfaces)]);
 
   const canvas = document.getElementById('stage');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
@@ -132,8 +134,11 @@ async function render() {
 
   const world = new THREE.Group();
   scene.add(world);
-  await addParts(world, job.world.parts);
+  const ballOpt = { balls: (job.render && job.render.balls) || 'ellipsoid' };
+  await addParts(world, job.world.parts, ballOpt);
   addHighlights(world, job.world.highlights);
+  await fontsReady;
+  addSurfaces(world, job.gui.surfaces, renderer);
   const focus = focusPoint(cam);
   if (L) {
     const { sun, sunDir } = addSunAndAmbient(scene, L);
@@ -145,7 +150,12 @@ async function render() {
     const atmo = L.effects && L.effects.atmosphere;
     if (atmo && !job.camera.ortho) {
       scene.fog = new THREE.FogExp2(horizon.clone(), 0.0072 * atmo.density * (0.6 + atmo.haze * 0.25));
+    } else if (!atmo && !job.camera.ortho && L.fogEnd > 0 && L.fogEnd < 10000) {
+      // legacy Lighting fog (no Atmosphere): linear from FogStart to FogEnd in FogColor
+      scene.fog = new THREE.Fog(srgb(L.fogColor), L.fogStart || 0, L.fogEnd);
+      if (!(job.render && job.render.background)) scene.background = srgb(L.fogColor);
     }
+    renderer.toneMappingExposure = Math.pow(2, L.exposure || 0);
   }
   addLights(scene, job.world.lights, focus.point);
   addSprites(scene, job.world.sprites);
@@ -173,10 +183,11 @@ async function render() {
   }
   composer.render();
 
+  vpBalls = ballOpt.balls;
   const viewportImages = await renderViewports(job.gui.viewports, dpr);
   await fontsReady;
   const gui = document.getElementById('gui');
-  paintGui(gui, job.gui, d, viewportImages, { hideCoreUi: job.render && job.render.hideCoreUi });
+  paintGui(gui, job.gui, d, viewportImages, { hideCoreUi: job.render && (job.render.hideCoreUi || job.render.hideScreenGui) });
   paintOverlays(gui, job.overlays, (x, y, z) => {
     const v = new THREE.Vector3(x, y, z).project(cam);
     return [((v.x + 1) / 2) * W, ((1 - v.y) / 2) * H];

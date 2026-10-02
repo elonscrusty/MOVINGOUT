@@ -35,8 +35,16 @@ local C = UI.Colors
 local roots: { ScreenGui } = {}
 local scales: { UIScale } = {}
 
+-- Small screens (phones) shrink the UI so it doesn't cover the playfield.
+local function screenFactor(): number
+	local cam = workspace.CurrentCamera
+	local h = cam and cam.ViewportSize.Y or 720
+	return math.clamp(h / 720, 0.62, 1)
+end
+UI.ScreenFactor = screenFactor
+
 local function applyScale()
-	local s = State.Settings().TextScale or 1
+	local s = (State.Settings().TextScale or 1) * screenFactor()
 	for _, sc in scales do
 		sc.Scale = s
 	end
@@ -309,6 +317,10 @@ end
 
 function UI.Init()
 	State.SettingsChanged:Connect(applyScale)
+	local cam = workspace.CurrentCamera
+	if cam then
+		cam:GetPropertyChangedSignal("ViewportSize"):Connect(applyScale)
+	end
 end
 
 -- Short pop-in animation for panels (respects Reduced Motion via ReducedShake setting).

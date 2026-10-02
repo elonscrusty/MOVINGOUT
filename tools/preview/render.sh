@@ -7,7 +7,7 @@
 #                                [--max-time S] [--wait-timeout S]
 #                                [--ref GIT_REF]   render a committed version (snapshot)
 #   bash tools/preview/render.sh <scene>[,<scene>...] --devices pc,phone [--outdir DIR]
-#   bash tools/preview/render.sh --all [--outdir DIR]      every scene x every device
+#   bash tools/preview/render.sh --all [--outdir DIR]      every scene on pc and phone
 #
 # Step 1 runs the real game modules on a mock Roblox API (Lune) and writes scene JSON;
 # step 2 draws it with three.js in headless Chromium. Scene JSON and metrics land next

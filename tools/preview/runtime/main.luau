@@ -88,6 +88,8 @@ local preview = Mock.boot({
 if args["no-coreui"] then
 	preview.render.hideCoreUi = true
 end
+-- Ball parts: "ellipsoid" (default, stretched to Size) or "uniform" (smallest axis)
+preview.render.balls = args.set.balls or "ellipsoid"
 
 -- scene helper libraries (scenes/lib/*.luau), compiled with the scene environment
 local sceneSource = fs.readFile(scenePath)

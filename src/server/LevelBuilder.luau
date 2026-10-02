@@ -14,6 +14,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local FurnitureData = require(ReplicatedStorage.Shared.FurnitureData)
+local Shapes = require(ReplicatedStorage.Shared.Shapes)
 local FurnitureModels = require(script.Parent.FurnitureModels)
 
 local LevelBuilder = {}
@@ -83,7 +84,9 @@ LevelBuilder.Part = part
 
 local function deco(parent: Instance, size: Vector3, cf: CFrame, color: Color3, material: Enum.Material?, shape: Enum.PartType?): Part
 	local p = part(parent, size, cf, color, material, "Deco")
-	if shape then
+	if shape == Enum.PartType.Ball then
+		Shapes.Ball(p)
+	elseif shape then
 		p.Shape = shape
 	end
 	return p
@@ -495,7 +498,8 @@ Props.Sign = function(parent, cf, p)
 	deco(parent, V(0.3, 4, 0.3), cf * CF(1.6, 2, 0), Color3.fromRGB(120, 90, 70), Enum.Material.Wood)
 	local board = deco(parent, V(4.4, 2, 0.3), cf * CF(0, 3.6, 0), p.Color or Color3.fromRGB(250, 240, 210), Enum.Material.Wood)
 	local gui = Instance.new("SurfaceGui")
-	gui.Face = Enum.NormalId.Front
+	gui.Face = Enum.NormalId.Back -- +Z, toward the camera
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
 	gui.PixelsPerStud = 40
 	gui.Parent = board
 	local label = Instance.new("TextLabel")
@@ -534,7 +538,7 @@ local function buildTruck(parent: Instance, t: any): (Model, CFrame, Vector3, CF
 		return x
 	end
 	-- chassis and cargo floor
-	p(V(W + 0.6, TRUCK_FLOOR - 0.6, L + 6), CF(0, (TRUCK_FLOOR - 0.6) / 2 + 0.6, -L / 2 - 3), Color3.fromRGB(60, 62, 70), smooth, "Chassis")
+	p(V(W + 0.6, TRUCK_FLOOR - 1, L + 6), CF(0, (TRUCK_FLOOR - 1) / 2 + 0.6, -L / 2 - 3), Color3.fromRGB(60, 62, 70), smooth, "Chassis")
 	local floor = p(V(W, 0.4, L), CF(0, TRUCK_FLOOR - 0.2, -L / 2), Color3.fromRGB(176, 140, 100), Enum.Material.WoodPlanks, "CargoFloor")
 	floor.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.6, 0.05)
 	-- side walls and front wall (the camera-side wall fades when it hides players)
@@ -574,6 +578,7 @@ local function buildTruck(parent: Instance, t: any): (Model, CFrame, Vector3, CF
 		board.CanCollide = false
 		local gui = Instance.new("SurfaceGui")
 		gui.Face = sx > 0 and Enum.NormalId.Right or Enum.NormalId.Left
+		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
 		gui.PixelsPerStud = 30
 		gui.Parent = board
 		local label = Instance.new("TextLabel")
@@ -662,10 +667,28 @@ function LevelBuilder.Build(level: any, parent: Instance): Built
 		base:SetAttribute("Ground", true)
 	end
 
+	local holes = {}
+	for _, hz in level.Hazards or {} do
+		if hz.Kind == "Water" then
+			table.insert(holes, { Min = v2(hz.Min), Max = v2(hz.Max) })
+		end
+	end
 	for _, g in level.Ground or {} do
 		local pal = PALETTE[g.Kind] or PALETTE.Concrete
-		local zone = rect(static, v2(g.Min), v2(g.Max), g.Top or 0.02, 1, g.Color or pal[1], g.Material or pal[2], g.Kind)
-		zone:SetAttribute("Ground", true)
+		local zonePieces = { { Min = v2(g.Min), Max = v2(g.Max) } }
+		for _, hole in holes do
+			local nextPieces = {}
+			for _, r in zonePieces do
+				for _, piece in subtractRect(r, hole) do
+					table.insert(nextPieces, piece)
+				end
+			end
+			zonePieces = nextPieces
+		end
+		for _, r in zonePieces do
+			local zone = rect(static, r.Min, r.Max, g.Top or 0.02, 1, g.Color or pal[1], g.Material or pal[2], g.Kind)
+			zone:SetAttribute("Ground", true)
+		end
 		if g.Kind == "Road" then
 			-- dashed centre line
 			local min, max = v2(g.Min), v2(g.Max)

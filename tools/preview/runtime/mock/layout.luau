@@ -860,8 +860,16 @@ function L.ensure()
 	end
 end
 
+-- Layout runs at most every R.layoutInterval simulated seconds (default 1/20) from the
+-- frame loop; reads of AbsoluteSize / AbsolutePosition / TextBounds and the export
+-- always lay out first, so scripts never see stale values for long.
+local lastLayout = -math.huge
 S.frameHooks.layout = function()
-	L.update()
+	local interval = R.layoutInterval or (1 / 20)
+	if S.now - lastLayout >= interval - 1e-6 then
+		lastLayout = S.now
+		L.update()
+	end
 end
 
 -- Seeds the change-detection baseline when someone starts listening.

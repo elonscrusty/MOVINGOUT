@@ -5,6 +5,7 @@
 	World: BaseParts (Block/Ball/Cylinder/Wedge/CornerWedge, MeshParts as boxes,
 	SpecialMesh shapes), lights, Fire / ParticleEmitter sprites, Highlights, Beams,
 	Lighting + post effects, the camera.
+	SurfaceGuis: the same paint list per gui plus its part / face (drawn as a texture).
 	GUI: a flat paint list per Roblox ZIndex rules (ScreenGuis by DisplayOrder, Sibling /
 	Global ZIndexBehavior, CanvasGroups as nested groups), each item with its final
 	transform, clip rect, colours, corners, strokes, gradients and laid-out text lines.
@@ -777,13 +778,43 @@ function E.gui()
 	L.update(true)
 	vpCounter = 0
 	local ctx = { viewports = {} }
-	local screens, billboards = {}, {}
+	local screens, billboards, surfaceRoots = {}, {}, {}
 	for _, root in ipairs(L.roots()) do
 		local st = states[root]
 		if st.info.isA.ScreenGui then
 			table.insert(screens, root)
 		elseif st.info.isA.BillboardGui then
 			table.insert(billboards, root)
+		elseif st.info.isA.SurfaceGui then
+			table.insert(surfaceRoots, root)
+		end
+	end
+	-- SurfaceGuis: painted into a texture on their part's face by the renderer
+	local surfaces = {}
+	for _, sg in ipairs(surfaceRoots) do
+		local st = states[sg]
+		local l = st.x.layout
+		local adornee = gp(st, "Adornee") or st.parent
+		local ast = adornee and states[adornee]
+		if gp(st, "Enabled") and l and l.w > 0 and l.h > 0 and ast and ast.info.isA.BasePart and adornee:IsDescendantOf(R.services.Workspace) then
+			local items = {}
+			for _, entry in ipairs(sortedChildren(st)) do
+				emitSibling(entry.c, entry.st, items, 1, ctx)
+			end
+			if #items > 0 then
+				table.insert(surfaces, {
+					name = st.name,
+					face = gp(st, "Face").Name,
+					w = r4(l.w),
+					h = r4(l.h),
+					cf = cf12(R.getProp(ast, "CFrame")),
+					size = v3(R.getProp(ast, "Size")),
+					alwaysOnTop = gp(st, "AlwaysOnTop"),
+					lightInfluence = r4(gp(st, "LightInfluence")),
+					brightness = r4(gp(st, "Brightness")),
+					items = items,
+				})
+			end
 		end
 	end
 	table.sort(screens, function(a, b)
@@ -813,7 +844,7 @@ function E.gui()
 	end
 	for _, sg in ipairs(screens) do
 		local st = states[sg]
-		if gp(st, "Enabled") then
+		if gp(st, "Enabled") and not (R.api and R.api.render.hideScreenGui) then
 			local items = {}
 			if gp(st, "ZIndexBehavior") == Enum.ZIndexBehavior.Global then
 				emitGlobal(sg, st, items, ctx)
@@ -853,8 +884,33 @@ function E.gui()
 	end
 	local d = R.options.device
 	local inset = R.guiInset()
+	-- Roblox's touch jump button shows on touch devices while the character can jump
+	-- and the PlayerModule controls are enabled
+	local touch = nil
+	if d.touch and R.localPlayer then
+		local ps = R.findChild(states[R.localPlayer], "PlayerScripts")
+		local pm = ps and R.findChild(states[ps], "PlayerModule")
+		local enabled = not pm or (states[pm].attrs == nil or states[pm].attrs.ControlsEnabled ~= false)
+		local char = R.getProp(states[R.localPlayer], "Character")
+		local hum = nil
+		if char and states[char] then
+			for _, c in ipairs(states[char].children) do
+				if states[c].info.isA.Humanoid then
+					hum = c
+				end
+			end
+		end
+		local canJump = false
+		if hum then
+			local hst = states[hum]
+			canJump = (gp(hst, "UseJumpPower") and gp(hst, "JumpPower") or gp(hst, "JumpHeight")) > 0
+		end
+		touch = { jump = enabled and canJump and R.coreGui.All ~= false, enabled = enabled }
+	end
 	return {
+		touch = touch,
 		layers = layers,
+		surfaces = surfaces,
 		viewports = viewports,
 		safe = d.safe,
 		topbar = { y = (d.topbarBelowSafeTop and d.safe.top or 0), h = d.topbar, bottom = inset.Y },

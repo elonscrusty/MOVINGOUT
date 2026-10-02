@@ -212,6 +212,25 @@ function paintCoreUi(root, gui, device) {
   });
 }
 
+// Ghost of Roblox's touch jump button (TouchGui JumpButton: 70 px on small screens,
+// 120 px otherwise, bottom right inside the safe area).
+function paintTouch(root, gui, device) {
+  if (!gui.touch || !gui.touch.jump) return;
+  const W = device.width - (gui.safe.left || 0) - (gui.safe.right || 0);
+  const H = device.height - (gui.safe.bottom || 0);
+  const small = Math.min(device.width, device.height) <= 500;
+  const s = small ? 70 : 120;
+  const x = (gui.safe.left || 0) + W - (s * 1.5 - 10);
+  const y = small ? H - s - 20 : H - s * 1.75;
+  const el = document.createElement('div');
+  el.style.cssText = `left:${x}px;top:${y}px;width:${s}px;height:${s}px;border-radius:50%;background:rgba(18,21,27,0.35);box-shadow:0 0 0 2px rgba(255,255,255,0.45);`;
+  const glyph = document.createElement('div');
+  glyph.style.cssText = `left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.8);font:700 ${Math.round(s * 0.4)}px "Source Sans 3";`;
+  glyph.textContent = '⌃';
+  el.appendChild(glyph);
+  root.appendChild(el);
+}
+
 export function paintGui(root, gui, device, viewportImages, opts = {}) {
   root.innerHTML = '';
   for (const layer of gui.layers) {
@@ -221,7 +240,10 @@ export function paintGui(root, gui, device, viewportImages, opts = {}) {
     root.appendChild(layerEl);
     paintItems(layerEl, layer.items, viewportImages);
   }
-  if (!opts.hideCoreUi) paintCoreUi(root, gui, device);
+  if (!opts.hideCoreUi) {
+    paintCoreUi(root, gui, device);
+    paintTouch(root, gui, device);
+  }
 }
 
 export function paintOverlays(root, overlays, project) {

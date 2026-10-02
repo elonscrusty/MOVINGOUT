@@ -24,6 +24,7 @@ local Players = game:GetService("Players")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local S = require(script.Parent.Services)
+local Shapes = require(ReplicatedStorage.Shared.Shapes)
 
 local Hazards = {}
 
@@ -383,22 +384,22 @@ local function buildGhost(parent: Instance): Model
 	m.Name = "Ghost"
 	m:SetAttribute("Ghost", true)
 	local body = part(m, V(3.4, 4, 3.4), CF(0, 0, 0), Color3.fromRGB(236, 240, 255), Enum.Material.SmoothPlastic, "GhostBody")
-	body.Shape = Enum.PartType.Ball
+	Shapes.Ball(body)
 	body.Transparency = 0.2
 	body.CanCollide = false
 	body:SetAttribute("Ghost", true)
 	m.PrimaryPart = body
 	local tail = part(m, V(2.6, 2.2, 2.6), CF(0, -2, 0), Color3.fromRGB(236, 240, 255), Enum.Material.SmoothPlastic, "GhostTail")
-	tail.Shape = Enum.PartType.Ball
+	Shapes.Ball(tail)
 	tail.Transparency = 0.35
 	tail.CanCollide = false
 	for _, x in { -0.65, 0.65 } do
 		local eye = part(m, V(0.6, 0.9, 0.3), CF(x, 0.4, -1.55), Color3.fromRGB(30, 30, 50), Enum.Material.SmoothPlastic, "GhostEye")
-		eye.Shape = Enum.PartType.Ball
+		Shapes.Ball(eye)
 		eye.CanCollide = false
 	end
 	local mouth = part(m, V(0.8, 0.6, 0.3), CF(0, -0.5, -1.55), Color3.fromRGB(30, 30, 50), Enum.Material.SmoothPlastic, "GhostMouth")
-	mouth.Shape = Enum.PartType.Ball
+	Shapes.Ball(mouth)
 	mouth.CanCollide = false
 	local light = Instance.new("PointLight")
 	light.Color = Color3.fromRGB(170, 200, 255)

@@ -9,6 +9,7 @@
 ]]
 
 local FurnitureData = require(game:GetService("ReplicatedStorage").Shared.FurnitureData)
+local Shapes = require(game:GetService("ReplicatedStorage").Shared.Shapes)
 
 local FurnitureModels = {}
 
@@ -375,10 +376,12 @@ function FurnitureModels.Build(kind: string, tint: Color3?): Model
 	local function add(size: Vector3, cf: CFrame, color: Color3, material: Enum.Material?, shape: Enum.PartType?): BasePart
 		local p = Instance.new("Part")
 		p.Name = "Look"
-		if shape then
+		p.Size = size
+		if shape == SP then
+			Shapes.Ball(p)
+		elseif shape then
 			p.Shape = shape
 		end
-		p.Size = size
 		p.CFrame = body.CFrame * cf
 		p.Color = color
 		p.Material = material or smooth

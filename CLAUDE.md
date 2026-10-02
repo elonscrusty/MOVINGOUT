@@ -18,5 +18,14 @@ Studio access during sessions, so nothing is verified in Studio unless they say 
 - No secrets in client code or ReplicatedStorage. Player text always goes through Roblox filtering.
 - Never present a mock or unconnected feature as working. Report verified vs assumed.
 
+## Commands
+- `bash tools/check.sh` type check + compile + Rojo build (`--quick` skips the build).
+- `python3 tools/levels/check.py [Id]` level maps + route / truck-fit checks (docs/LEVELS.md).
+- `/tmp/sh-tools/lune/lune run tools/tests/logic.luau` logic tests.
+- `bash tools/preview/render.sh level --set level=Suburb --set hud=on --devices pc,phone` screenshots (docs/PREVIEW.md).
+- Tools live in /tmp/sh-tools (rojo, luau-lsp, lune): reinstall per session (see docs/LEVELS.md, tools/preview/setup.sh).
+
 ## Where things stand
-Empty starter: baseplate, spawn, server/client entry scripts. Game idea not written down yet.
+v0.1.0 first playable: 4 jobs + depot lobby, all systems in. Type check, logic tests,
+level checks and preview renders pass. NOT tested in Studio: physics handling needs a
+playtest and tuning. See docs/STATUS.md for verification, assumptions and gaps.

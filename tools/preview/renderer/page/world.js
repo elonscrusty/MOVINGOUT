@@ -52,9 +52,12 @@ const unitTorso = polyGeometry(
   [[0, 1, 2, 3].reverse(), [4, 5, 6, 7], [0, 4, 5, 1].reverse(), [1, 5, 6, 2].reverse(), [2, 6, 7, 3].reverse(), [3, 7, 4, 0].reverse()],
 );
 
+// Ball: an ellipsoid stretched to Size by default; balls = 'uniform' draws a sphere of
+// the smallest axis instead (Roblox keeps Ball parts uniform; see docs/PREVIEW.md).
+let ballMode = 'ellipsoid';
 function shapeGeometry(p) {
   switch (p.shape) {
-    case 'Ball': return { geo: unitSphere, key: 'ball', uniform: 'min' };
+    case 'Ball': return ballMode === 'uniform' ? { geo: unitSphere, key: 'ball', uniform: 'min' } : { geo: unitSphere, key: 'ball' };
     case 'Cylinder': return { geo: unitCylinderX, key: 'cylx', uniform: 'yz' };
     case 'Wedge': return { geo: unitWedge, key: 'wedge' };
     case 'CornerWedge': return { geo: unitCorner, key: 'corner' };
@@ -110,6 +113,7 @@ const TEXTURED = new Set(['Grass', 'Slate', 'Cobblestone', 'Wood', 'WoodPlanks',
 
 // Adds parts to `group`; opaque parts are instanced by (geometry, material, shadow).
 export async function addParts(group, parts, opts = {}) {
+  ballMode = opts.balls || 'ellipsoid';
   const batches = new Map();
   let tris = 0;
   const usedTextured = new Set();
@@ -230,10 +234,17 @@ export function addSunAndAmbient(scene, lighting) {
   const sunDir = new THREE.Vector3(L.sun[0], L.sun[1], L.sun[2]).normalize();
   const shift = L.colorShiftTop;
   let sunColor = (shift[0] + shift[1] + shift[2]) > 0.02 ? srgb(shift) : new THREE.Color(1, 0.97, 0.92);
-  // low sun gets warmer and weaker, below the horizon it is off
-  const elev = sunDir.y;
-  const sunFactor = THREE.MathUtils.clamp(elev * 4, 0, 1);
-  const sun = new THREE.DirectionalLight(sunColor, L.brightness * 1.05 * sunFactor);
+  // low sun gets warmer and weaker; below the horizon the moon (opposite the sun, dim,
+  // cool) lights the scene like Roblox's night lighting (approximation)
+  let elev = sunDir.y;
+  let intensity = L.brightness * 1.05 * THREE.MathUtils.clamp(elev * 4, 0, 1);
+  if (elev < 0) {
+    sunDir.negate();
+    elev = sunDir.y;
+    sunColor = new THREE.Color(0.62, 0.68, 0.9);
+    intensity = L.brightness * 0.28 * THREE.MathUtils.clamp(elev * 4, 0, 1);
+  }
+  const sun = new THREE.DirectionalLight(sunColor, intensity);
   sun.position.copy(sunDir).multiplyScalar(500);
   scene.add(sun);
   scene.add(sun.target);

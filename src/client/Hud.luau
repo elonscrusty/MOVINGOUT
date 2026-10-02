@@ -158,7 +158,7 @@ local function buildTop()
 	topLeft = Instance.new("Frame")
 	topLeft.BackgroundTransparency = 1
 	topLeft.Size = UDim2.fromOffset(300, 110)
-	topLeft.Position = U(0, 10, 0, 10)
+	topLeft.Position = U(0, 10, 0, 62) -- below Roblox's top bar buttons
 	topLeft.Parent = root
 	UI.Scaled(topLeft)
 	pauseButton = UI.Button(topLeft, "II", UDim2.fromOffset(56, 56), UDim2.fromOffset(30, 30), function()
@@ -181,7 +181,7 @@ local function buildTop()
 	chips = Instance.new("Frame")
 	chips.BackgroundTransparency = 1
 	chips.Size = UDim2.fromOffset(200, 200)
-	chips.Position = U(1, -10, 0, 10)
+	chips.Position = U(1, -10, 0, 62)
 	chips.AnchorPoint = Vector2.new(1, 0)
 	chips.Parent = root
 	UI.Scaled(chips)
@@ -247,8 +247,8 @@ local function buildLobbyBar()
 	lobbyBar = Instance.new("Frame")
 	lobbyBar.BackgroundTransparency = 1
 	lobbyBar.Size = UDim2.fromOffset(470, 64)
-	lobbyBar.Position = U(0.5, 0, 1, -76)
-	lobbyBar.AnchorPoint = Vector2.new(0.5, 1)
+	lobbyBar.Position = U(0.5, 0, 0, 10)
+	lobbyBar.AnchorPoint = Vector2.new(0.5, 0)
 	lobbyBar.Parent = root
 	UI.Scaled(lobbyBar)
 	UI.Button(lobbyBar, "JOB BOARD", UDim2.fromOffset(170, 56), UDim2.fromOffset(85, 32), function()
@@ -265,8 +265,8 @@ end
 local function buildTouch()
 	touchFrame = Instance.new("Frame")
 	touchFrame.BackgroundTransparency = 1
-	touchFrame.Size = UDim2.fromOffset(300, 260)
-	touchFrame.Position = U(1, -100, 1, -110)
+	touchFrame.Size = UDim2.fromOffset(250, 170)
+	touchFrame.Position = U(1, -96, 1, -8) -- left of Roblox's jump button
 	touchFrame.AnchorPoint = Vector2.new(1, 1)
 	touchFrame.Parent = root
 	local function tb(text: string, action: string, size: number, x: number, y: number, color: Color3)
@@ -300,10 +300,10 @@ local function buildTouch()
 		end)
 		return b
 	end
-	local grab = tb("GRAB", "Grab", 104, 230, 150, C.Yellow)
+	local grab = tb("GRAB", "Grab", 96, 196, 112, C.Yellow)
 	grab.Name = "GrabButton"
-	tb("THROW", "Throw", 80, 120, 200, C.Orange)
-	tb("SLAP", "Slap", 70, 150, 90, C.White)
+	tb("THROW", "Throw", 74, 96, 128, C.Orange)
+	tb("SLAP", "Slap", 62, 130, 42, C.White)
 end
 
 ----------------------------------------------------------------------------------------
@@ -382,6 +382,14 @@ local function update()
 
 	-- hint
 	local hint = visibleHud and menu == nil and currentHint() or ""
+	if Input.Device == "Touch" then
+		-- keep the bottom right free for the touch buttons
+		hintFrame.AnchorPoint = Vector2.new(0.5, 0)
+		hintFrame.Position = U(0.5, 0, 0, phase == "Lobby" and 58 or 62)
+	else
+		hintFrame.AnchorPoint = Vector2.new(0.5, 1)
+		hintFrame.Position = U(0.5, 0, 1, -16)
+	end
 	hintLabel.Text = hint
 	hintFrame.Visible = hint ~= ""
 	lobbyBar.Visible = joined and menu == nil and phase == "Lobby" and State.MySlot() > 0
@@ -396,6 +404,12 @@ local function update()
 		countdownLabel.Visible = false
 	end
 
+	if menu ~= nil then
+		tutorialCard.Visible = false
+	elseif tutorialActive and State.Settings().ShowTutorialHints then
+		tutorialCard.Visible = true
+	end
+
 	local status = State.SaveStatus
 	saveNote.Text = (joined and phase == "Lobby" and menu == nil and status ~= "ok") and "Progress isn't being saved this session (data storage unavailable)." or ""
 end
@@ -407,7 +421,7 @@ function Hud.Init()
 	buildLobbyBar()
 	buildTouch()
 
-	tutorialCard = UI.Panel(root, UDim2.fromOffset(300, 92), U(0, 10, 0, 130), Vector2.new(0, 0))
+	tutorialCard = UI.Panel(root, UDim2.fromOffset(300, 92), U(0, 10, 0, 182), Vector2.new(0, 0))
 	UI.Scaled(tutorialCard)
 	tutorialText = UI.Text(tutorialCard, "", U(1, -20, 1, -14), U(0, 10, 0, 7), { TextXAlignment = Enum.TextXAlignment.Left, MaxText = 18 })
 	tutorialCard.Visible = false
